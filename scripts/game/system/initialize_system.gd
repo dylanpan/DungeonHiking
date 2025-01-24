@@ -79,3 +79,4 @@ func update(delta):
 		init_all_entities()
 		var _tmp = World_Helper.get_world_component_property_map()
 		World_Helper.print_dict_properties(_tmp)
+		World_Helper.game_state_flag = base.game_state.MOVE

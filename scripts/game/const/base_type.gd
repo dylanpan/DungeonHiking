@@ -22,6 +22,7 @@ enum type {
 enum game_state {
 	NONE = 1,
 	PRE_START = 2,
-	START = 3,
-	END = 4,
+	MOVE = 3,
+	FIGHT = 4,
+	END = 5,
 }

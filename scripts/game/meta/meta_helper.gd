@@ -10,7 +10,7 @@ func init():
 			"id": "1",
 			"level": 1,
 			"exp": 10,
-			"hp": 1,
+			"hp": 100,
 			"mana": 1,
 			"def": 100,
 			"shield": 1,

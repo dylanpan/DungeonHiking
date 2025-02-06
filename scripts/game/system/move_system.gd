@@ -43,9 +43,15 @@ func update(delta):
 			if time < min_time and time > 0:
 				min_time = time
 				min_indexs.clear()
-				min_indexs.append(index)
-			elif time == min_time:
-				min_indexs.append(index)
+				if hp_list[index] > 0:
+					min_indexs.append(index)
+			elif time == min_time and time > 0:
+				if hp_list[index] > 0:
+					min_indexs.append(index)
+			elif 0 == min_time and time > 0:
+				min_time = time
+				if hp_list[index] > 0:
+					min_indexs.append(index)
 		World_Helper.set_attack_index_list(min_indexs)
 		
 		for index in range(tmp_time.size()):
@@ -58,7 +64,7 @@ func update(delta):
 				var distance = min(last_distance + min_time * speed, max_distance)
 				last_distance_list[index] = distance
 				#components[index].last_distance = distance
-		print("last_distance: ", last_distance_list, ", attack index: ", min_indexs)
+		Log_Helper.log(["[move] last_distance: ", last_distance_list, ", attack index: ", min_indexs])
 		
 		World_Helper.game_state_flag = base.game_state.FIGHT
 		_start_move_flag = false

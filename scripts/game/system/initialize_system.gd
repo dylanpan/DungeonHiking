@@ -17,6 +17,10 @@ func init_all_entities():
 	_init_monsters()
 
 func _init_peoples():
+	_get_people()
+	_get_people()
+
+func _get_people():
 	var entity = Entity.new()
 	entity.uuid = World_Util.get_uuid()
 	
@@ -29,6 +33,10 @@ func _init_peoples():
 	id_component.id = entity.id
 
 func _init_monsters():
+	_get_monster()
+	_get_monster()
+
+func _get_monster():
 	var entity = Entity.new()
 	entity.uuid = World_Util.get_uuid()
 	

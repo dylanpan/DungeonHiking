@@ -46,7 +46,9 @@ func get_damage(index, be_atk_index):
 	# 属性攻击 = 属性攻击
 	#var e_atk
 	# 物理伤害 = 物理攻击 - 物理防御
-	var p_damage = p_atk * (1 - def * 0.01)
+	var def_max = 1000.0
+	var def_radio = 1 - def / def_max
+	var p_damage = p_atk * def_radio
 	# 属性伤害 = 属性攻击 - 属性防御
 	var e_damage = earth_element_atk * (1 - earth_element_def * 0.01) \
 					 + fire_element_atk * (1 - fire_element_def * 0.01) \
@@ -62,7 +64,7 @@ func update_hp_and_shield(index, damage):
 	var shield = shield_list[index]
 	if shield > damage:
 		shield_list[index] -= damage
-		Log_Helper.log(["----->>", index, ", shield: ", shield_list[index], ", hp: ", hp_list[index]])
+		Log_Helper.log(["[attack] ----->>>> result: ", index, ", shield: ", shield_list[index], ", hp: ", hp_list[index]])
 		
 		if World_Helper.game_state_flag == base.game_state.FIGHT:
 			World_Helper.game_state_flag = base.game_state.MOVE
@@ -70,16 +72,35 @@ func update_hp_and_shield(index, damage):
 		if hp_list[index] > 0:
 			hp_list[index] -= damage - shield
 			shield_list[index] = 0
-			Log_Helper.log(["----->>>>", index, ", shield: ", shield_list[index], ", hp: ", hp_list[index]])
+			Log_Helper.log(["[attack] ----->>>> result: ", index, ", shield: ", shield_list[index], ", hp: ", hp_list[index]])
 			if hp_list[index] < 0:
 				hp_list[index] = 0
-				World_Helper.game_state_flag = base.game_state.END
 				# TODO 出现掉落
+				
+				if is_none_atk(index):
+					World_Helper.game_state_flag = base.game_state.END
+				else:
+					if World_Helper.game_state_flag == base.game_state.FIGHT:
+						World_Helper.game_state_flag = base.game_state.MOVE
 			else:
 				if World_Helper.game_state_flag == base.game_state.FIGHT:
 					World_Helper.game_state_flag = base.game_state.MOVE
+			Log_Helper.log(["[attack] ----->>>> end hp: ", hp_list])
 	#var _tmp = World_Helper.get_world_component_property_map()
 	#World_Helper.print_dict_properties(_tmp)
+
+func is_none_atk(be_atk_index):
+	var hp_list = World_Helper.get_component_property_list("hp", "hp")
+	var id_type_list = World_Helper.get_component_property_list("id", "id_type")
+	var be_atk_type = id_type_list[be_atk_index]
+	var be_attack_index_list = []
+	var i_length = id_type_list.size()
+	for index in range(i_length):
+		# 判断攻击方类型
+		if id_type_list[index] == be_atk_type and hp_list[index] > 0:
+			be_attack_index_list.append(index)
+	var b_length = be_attack_index_list.size()
+	return b_length <= 0
 
 func get_is_critical(index):
 	var critical_rate_list = World_Helper.get_component_property_list("critical", "critical_rate")
@@ -99,52 +120,86 @@ func get_is_dodge(be_atk_index):
 	# TODO 随机几率
 	return false
 
+func get_be_attack_index(atk_index):
+	# all [0,1,2,3,4]
+	# atk    [0]
+	# be_atk [1,2,3,4]
+	# atk    [0] - 2
+	# be_atk [1,2]
+	# 根据攻击距离选择被攻击单位
+	var id_type_list = World_Helper.get_component_property_list("id", "id_type")
+	var hp_list = World_Helper.get_component_property_list("hp", "hp")
+	var atk_distance_list = World_Helper.get_component_property_list("atk", "atk_distance")
+	var be_attack_index_list = []
+	var i_length = id_type_list.size()
+	var atk_type = id_type_list[atk_index]
+	for index in range(i_length):
+		# 判断攻击方类型
+		if id_type_list[index] != atk_type:
+			be_attack_index_list.append(index)
+	
+	var atk_distance = atk_distance_list[atk_index]
+	var can_be_atk_index_list = []
+	var length = be_attack_index_list.size()
+	for atk_range_index in range(atk_distance):
+		# 根据攻击距离获得对应范围的单位
+		if atk_range_index < length and hp_list[be_attack_index_list[atk_range_index]] > 0:
+			can_be_atk_index_list.append(be_attack_index_list[atk_range_index])
+	
+	#TODO 进行随机单位获取 - 需要新增可同时攻击单位个数
+	var can_atk_count = 1
+	var c_length = can_be_atk_index_list.size()
+	var be_atk_index = -1
+	if c_length > 0:
+		be_atk_index = can_be_atk_index_list[c_length - 1]
+		if hp_list[be_atk_index] <= 0:
+			for index in can_be_atk_index_list:
+				if hp_list[index] > 0:
+					be_atk_index = index
+					break
+	return be_atk_index
+
 func update(delta):
 	if World_Helper.game_state_flag == base.game_state.FIGHT:
 		var attack_index_list = World_Helper.get_attack_index_list()
 		
 		var id_type_list = World_Helper.get_component_property_list("id", "id_type")
-		var atk_distance_list = World_Helper.get_component_property_list("atk", "atk_distance")
 		var hp_list = World_Helper.get_component_property_list("hp", "hp")
 		
 		var length = id_type_list.size()
+		var a_length = attack_index_list.size()
+		var count = 0
 		# 攻击敌方单位
 		for index in attack_index_list:
 			# 选择攻击方式（默认物理攻击，技能、道具为主动使用）
-			# 根据攻击距离选择被攻击单位
-			var atk_distance = atk_distance_list[index]
-			# 判断攻击方类型
-			var atk_radio = 1
-			if id_type_list[index] == base.type.PEOPLE:
-				atk_radio = 1
-			elif id_type_list[index] == base.type.MONSTER:
-				atk_radio = -1
 			if hp_list[index] > 0:
-				Log_Helper.log(["---------------", index, ", atk_radio: ", atk_radio])
-				# [0,1,2,3,4]
-				for atk_range_index in range(atk_distance):
-					var be_atk_index = index + atk_radio * (atk_range_index + 1)
-					if be_atk_index < length and be_atk_index >= 0 and hp_list[be_atk_index] > 0:
-						# 本次攻击伤害
-						var damage = get_damage(index, be_atk_index)
-						Log_Helper.log(["----->>", index ," vs ", be_atk_index, ", damage: ", damage])
-						# 反击即伤害的同时对对方造成无闪避无反击的伤害
-						var counter_damage = 0
-						var is_counter = get_is_counter(be_atk_index)
-						if is_counter:
-							# 反击伤害 = 无闪避无反击的伤害
-							counter_damage = get_damage(be_atk_index, index)
-						Log_Helper.log(["----->>", be_atk_index, ", counter_damage: ", counter_damage])
-						# 扣减敌方血量 = 伤害 - 护盾
-						if damage > 0:
-							# 伤害 = 闪避 ? 0 : 伤害
-							var is_dodge = get_is_dodge(be_atk_index)
-							if is_dodge:
-								damage = 0
-								Log_Helper.log(["----->>", be_atk_index, " dodge !!!"])
-							else:
-								update_hp_and_shield(be_atk_index, damage)
-						# 扣减我方血量 = 伤害 - 护盾
-						if counter_damage > 0:
-							update_hp_and_shield(index, counter_damage)
+				var be_atk_index = get_be_attack_index(index)
+				if be_atk_index < length and be_atk_index >= 0 and hp_list[be_atk_index] > 0:
+					count += 1
+					# 本次攻击伤害
+					var damage = get_damage(index, be_atk_index)
+					Log_Helper.log(["[attack] ----->> ", index ," vs ", be_atk_index, ", damage: ", damage])
+					# 反击即伤害的同时对对方造成无闪避无反击的伤害
+					var counter_damage = 0
+					var is_counter = get_is_counter(be_atk_index)
+					if is_counter:
+						# 反击伤害 = 无闪避无反击的伤害
+						counter_damage = get_damage(be_atk_index, index)
+						Log_Helper.log(["[attack] ----->> ", be_atk_index, ", counter_damage: ", counter_damage])
+					# 扣减敌方血量 = 伤害 - 护盾
+					if damage > 0:
+						# 伤害 = 闪避 ? 0 : 伤害
+						var is_dodge = get_is_dodge(be_atk_index)
+						if is_dodge:
+							damage = 0
+							Log_Helper.log(["[attack] ----->> ", be_atk_index, " dodge !!!"])
+						else:
+							update_hp_and_shield(be_atk_index, damage)
+					# 扣减我方血量 = 伤害 - 护盾
+					if counter_damage > 0:
+						update_hp_and_shield(index, counter_damage)
 				# 更新对应数据
+		if count != a_length:
+			Log_Helper.log(["[attack] ----->> no match atk count ", count])
+			if World_Helper.game_state_flag == base.game_state.FIGHT:
+				World_Helper.game_state_flag = base.game_state.MOVE

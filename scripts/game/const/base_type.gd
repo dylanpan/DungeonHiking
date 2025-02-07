@@ -19,6 +19,15 @@ enum type {
 	ITEM = 6, 
 }
 
+enum atk_type {
+	## 普通攻击
+	NORMAL = 1,
+	## 道具攻击
+	PROP = 2,
+	## 技能攻击
+	SKILL = 3,
+}
+
 enum game_state {
 	NONE = 1,
 	PRE_START = 2,

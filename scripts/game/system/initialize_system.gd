@@ -2,13 +2,11 @@ class_name Initialize_System
 extends I_System
 
 var list := []
-var _meta_helper: Meta_Helper
 
 func init():
 	# 初始化标识
 	list = []
-	_meta_helper = Meta_Helper.new()
-	_meta_helper.init()
+	Meta_Helper.init()
 
 func init_all_entities():
 	# 初始化所有的实体，以及对应的组件
@@ -24,7 +22,7 @@ func _get_people():
 	var entity = Entity.new()
 	entity.uuid = World_Util.get_uuid()
 	
-	var meta = _meta_helper.get_people("1")
+	var meta = Meta_Helper.get_people("1")
 	_init_battle_component(entity, meta)
 	
 	var id_component = Id_Component.new()
@@ -40,7 +38,7 @@ func _get_monster():
 	var entity = Entity.new()
 	entity.uuid = World_Util.get_uuid()
 	
-	var meta = _meta_helper.get_monster("1")
+	var meta = Meta_Helper.get_monster("1")
 	_init_battle_component(entity, meta)
 	
 	var id_component = Id_Component.new()

@@ -11,3 +11,5 @@ var atk: float
 var atk_speed: float
 ## 攻击距离
 var atk_distance: float
+## 攻击个数
+var atk_count: int

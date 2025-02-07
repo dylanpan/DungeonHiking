@@ -71,6 +71,8 @@ static var _component_name_map = {
 	"atk": "Atk_Component",
 	"atk_speed": "Atk_Component",
 	"atk_distance": "Atk_Component",
+	"atk_count": "Atk_Component",
+	"skill_ids": "Skill_Component",
 	"counter_rate": "Counter_Component",
 	"critical_rate": "Critical_Component",
 	"critical_atk": "Critical_Component",

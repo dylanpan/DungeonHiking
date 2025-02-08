@@ -1,7 +1,7 @@
 class_name World_Helper
 
 static var _game_state_flag: base.game_state = base.game_state.NONE
-# 游戏状态标识
+## 游戏状态标识
 static var game_state_flag: base.game_state:
 	get:
 		return _game_state_flag
@@ -73,6 +73,8 @@ static var _component_name_map = {
 	"atk_distance": "Atk_Component",
 	"atk_count": "Atk_Component",
 	"skill_ids": "Skill_Component",
+	"prop_ids": "Prop_Component",
+	"prop_ids_count": "Prop_Component",
 	"counter_rate": "Counter_Component",
 	"critical_rate": "Critical_Component",
 	"critical_atk": "Critical_Component",
@@ -121,13 +123,45 @@ static func create_component(key: String):
 	var instance = instantiate_class(name)
 	return instance
 
+#region 全局数据记录
+
+#region 攻击单位
+# 攻击单位由 move_system 中移动得到
 static var _attack_index_list := []
 static func set_attack_index_list(value: Array):
 	_attack_index_list = value
 
 static func get_attack_index_list() -> Array:
 	return _attack_index_list
+#endregion
 
+#region 使用技能
+# 技能使用由玩家主动使用得到
+static var _skill_index_dict := {}
+static func set_skill_index_dict(value: Dictionary):
+	_skill_index_dict = value
+static func set_skill_index_by_key(key: int, value: int):
+	_skill_index_dict[key] = value
+
+static func get_skill_index_dict() -> Dictionary:
+	return _skill_index_dict
+#endregion
+
+#region 使用道具
+# 道具使用由玩家主动使用得到
+static var _prop_index_dict := {}
+static func set_prop_index_dict(value: Dictionary):
+	_prop_index_dict = value
+static func set_prop_index_by_key(key: int, value: int):
+	_prop_index_dict[key] = value
+
+static func get_prop_index_dict() -> Dictionary:
+	return _prop_index_dict
+#endregion
+
+#endregion
+
+#region 打印日志
 static func print_class_properties(obj: Object):
 	var property_list = obj.get_property_list()
 	for prop in property_list:
@@ -137,3 +171,4 @@ static func print_class_properties(obj: Object):
 
 static func print_dict_properties(obj: Dictionary):
 	print("print_dict ", obj)
+#endregion

@@ -9,9 +9,11 @@ func init():
 func destroy():
 	list.clear()
 
-func get_damage(index, be_atk_index, skill_index):
+func _get_damage(index, be_atk_index, skill_index, prop_index):
 	var atk_list = World_Helper.get_component_property_list("atk", "atk")
 	var skill_ids_list = World_Helper.get_component_property_list("skill", "skill_ids")
+	var prop_ids_list = World_Helper.get_component_property_list("prop", "prop_ids")
+	var prop_ids_count_list = World_Helper.get_component_property_list("prop", "prop_ids_count")
 	var def_list = World_Helper.get_component_property_list("def", "def")
 	var mana_list = World_Helper.get_component_property_list("mana", "mana")
 	var critical_atk_list = World_Helper.get_component_property_list("critical", "critical_atk")
@@ -32,6 +34,7 @@ func get_damage(index, be_atk_index, skill_index):
 	var thunder_element_atk = thunder_element_atk_list[index]
 	var wind_element_atk = wind_element_atk_list[index]
 	var skill_ids = skill_ids_list[index]
+	var prop_ids = prop_ids_list[index]
 	# 被攻击方参数
 	var def = def_list[be_atk_index]
 	var earth_element_def = earth_element_def_list[be_atk_index]
@@ -44,47 +47,69 @@ func get_damage(index, be_atk_index, skill_index):
 		var skill_id = skill_ids[skill_index]
 		var skill_meta = Meta_Helper.get_skill(skill_id)
 		# 技能攻击 = 配置表中的技能攻击
-		var s_atk = skill_meta["atk"]
-		var s_def = def
+		var skill_atk = skill_meta["atk"]
+		var skill_def = def
 		# 技能伤害 = 技能攻击 - 技能防御
-		var s_def_max = 1000.0
-		var s_damage = s_atk * (1 - s_def / s_def_max)
+		var skill_def_max = 1000.0
+		var skill_damage = skill_atk * (1 - skill_def / skill_def_max)
 		# 属性攻击 = 配置表中的属性攻击 + 本身的属性攻击
-		var s_earth_element_atk = earth_element_atk + skill_meta["earth_element_atk"]
-		var s_fire_element_atk = fire_element_atk + skill_meta["fire_element_atk"]
-		var s_thunder_element_atk = thunder_element_atk + skill_meta["thunder_element_atk"]
-		var s_wind_element_atk = wind_element_atk + skill_meta["wind_element_atk"]
+		var skill_earth_element_atk = earth_element_atk + skill_meta["earth_element_atk"]
+		var skill_fire_element_atk = fire_element_atk + skill_meta["fire_element_atk"]
+		var skill_thunder_element_atk = thunder_element_atk + skill_meta["thunder_element_atk"]
+		var skill_wind_element_atk = wind_element_atk + skill_meta["wind_element_atk"]
 		# 属性伤害 = 属性攻击 - 属性防御
 		var element_def_max = 1000.0
-		var e_damage = s_earth_element_atk * (1 - earth_element_def / element_def_max) \
-						 + s_fire_element_atk * (1 - fire_element_def / element_def_max) \
-						 + s_thunder_element_atk * (1 - thunder_element_def / element_def_max) \
-						 + s_wind_element_atk * (1 - wind_element_def / element_def_max)
+		var element_damage = skill_earth_element_atk * (1 - earth_element_def / element_def_max) \
+						 + skill_fire_element_atk * (1 - fire_element_def / element_def_max) \
+						 + skill_thunder_element_atk * (1 - thunder_element_def / element_def_max) \
+						 + skill_wind_element_atk * (1 - wind_element_def / element_def_max)
 		# 伤害 = 物理伤害 + 属性伤害
-		damage = s_damage + e_damage
+		damage = skill_damage + element_damage
+	elif prop_index >= 0:
+		var prop_id = prop_ids[prop_index]
+		var prop_meta = Meta_Helper.get_prop(prop_id)
+		# 技能攻击 = 配置表中的技能攻击
+		var prop_atk = prop_meta["atk"]
+		var prop_def = def
+		# 技能伤害 = 技能攻击 - 技能防御
+		var prop_def_max = 1000.0
+		var prop_damage = prop_atk * (1 - prop_def / prop_def_max)
+		# 属性攻击 = 配置表中的属性攻击 + 本身的属性攻击
+		var prop_earth_element_atk = earth_element_atk + prop_meta["earth_element_atk"]
+		var prop_fire_element_atk = fire_element_atk + prop_meta["fire_element_atk"]
+		var prop_thunder_element_atk = thunder_element_atk + prop_meta["thunder_element_atk"]
+		var prop_wind_element_atk = wind_element_atk + prop_meta["wind_element_atk"]
+		# 属性伤害 = 属性攻击 - 属性防御
+		var element_def_max = 1000.0
+		var element_damage = prop_earth_element_atk * (1 - earth_element_def / element_def_max) \
+						 + prop_fire_element_atk * (1 - fire_element_def / element_def_max) \
+						 + prop_thunder_element_atk * (1 - thunder_element_def / element_def_max) \
+						 + prop_wind_element_atk * (1 - wind_element_def / element_def_max)
+		# 伤害 = 物理伤害 + 属性伤害
+		damage = prop_damage + element_damage
 	else:
 		# 物理攻击 = 暴击 ? (普通攻击 + 暴击攻击) * 暴击倍数 : 普通攻击
-		var is_critical = get_is_critical(index)
+		var is_critical = _get_is_critical(index)
 		var critical_radio = 2
-		var p_atk = atk
+		var normal_atk = atk
 		if is_critical:
-			p_atk = (atk + critical_atk) * critical_radio
+			normal_atk = (atk + critical_atk) * critical_radio
 		# 属性攻击 = 属性攻击
 		#var e_atk
 		# 物理伤害 = 物理攻击 - 物理防御
 		var def_max = 1000.0
-		var p_damage = p_atk * (1 - def / def_max)
+		var normal_damage = normal_atk * (1 - def / def_max)
 		# 属性伤害 = 属性攻击 - 属性防御
 		var element_def_max = 1000.0
-		var e_damage = earth_element_atk * (1 - earth_element_def / element_def_max) \
+		var element_damage = earth_element_atk * (1 - earth_element_def / element_def_max) \
 						 + fire_element_atk * (1 - fire_element_def / element_def_max) \
 						 + thunder_element_atk * (1 - thunder_element_def / element_def_max) \
 						 + wind_element_atk * (1 - wind_element_def / element_def_max)
 		# 伤害 = 物理伤害 + 属性伤害
-		damage = p_damage + e_damage
+		damage = normal_damage + element_damage
 	return damage
 
-func update_hp_and_shield(index, damage):
+func _update_hp_and_shield(index, damage):
 	var hp_list = World_Helper.get_component_property_list("hp", "hp")
 	var shield_list = World_Helper.get_component_property_list("shield", "shield")
 	var shield = shield_list[index]
@@ -103,7 +128,7 @@ func update_hp_and_shield(index, damage):
 				hp_list[index] = 0
 				# TODO 出现掉落
 				
-				if is_none_atk(index):
+				if _is_none_atk(index):
 					World_Helper.game_state_flag = base.game_state.END
 				else:
 					if World_Helper.game_state_flag == base.game_state.FIGHT:
@@ -111,11 +136,11 @@ func update_hp_and_shield(index, damage):
 			else:
 				if World_Helper.game_state_flag == base.game_state.FIGHT:
 					World_Helper.game_state_flag = base.game_state.MOVE
-			Log_Helper.log(["[attack] ----->>>> end hp: ", hp_list])
+	Log_Helper.log(["[attack] ----->> end hp: ", hp_list])
 	#var _tmp = World_Helper.get_world_component_property_map()
 	#World_Helper.print_dict_properties(_tmp)
 
-func is_none_atk(be_atk_index):
+func _is_none_atk(be_atk_index):
 	var hp_list = World_Helper.get_component_property_list("hp", "hp")
 	var id_type_list = World_Helper.get_component_property_list("id", "id_type")
 	var be_atk_type = id_type_list[be_atk_index]
@@ -128,25 +153,25 @@ func is_none_atk(be_atk_index):
 	var b_length = be_attack_index_list.size()
 	return b_length <= 0
 
-func get_is_critical(index):
+func _get_is_critical(index):
 	var critical_rate_list = World_Helper.get_component_property_list("critical", "critical_rate")
 	var critical_rate = critical_rate_list[index]
 	# TODO 随机几率
 	return false
 
-func get_is_counter(be_atk_index):
+func _get_is_counter(be_atk_index):
 	var counter_rate_list = World_Helper.get_component_property_list("counter", "counter_rate")
 	var counter_rate = counter_rate_list[be_atk_index]
 	# TODO 随机几率
 	return false
 
-func get_is_dodge(be_atk_index):
+func _get_is_dodge(be_atk_index):
 	var dodge_list = World_Helper.get_component_property_list("dodge", "dodge")
 	var dodge = dodge_list[be_atk_index]
 	# TODO 随机几率
 	return false
 
-func get_be_attack_index_list(atk_index, atk_type, skill_index):
+func _get_be_attack_index_list(atk_index, atk_type, extra_index):
 	# all [0,1,2,3,4]
 	# atk    [0]
 	# be_atk [1,2,3,4]
@@ -172,10 +197,19 @@ func get_be_attack_index_list(atk_index, atk_type, skill_index):
 		# TODO 实现 4 回合 10 点火属性伤害，晕眩 2 回合
 		var skill_ids_list = World_Helper.get_component_property_list("skill", "skill_ids")
 		var skill_ids = skill_ids_list[atk_index]
-		var skill_id = skill_ids[skill_index]
+		var skill_id = skill_ids[extra_index]
+		Log_Helper.log(["[attack] ----->> ", atk_index, " use skill id: ", skill_id])
 		var skill_meta = Meta_Helper.get_skill(skill_id)
 		atk_distance = skill_meta["atk_distance"]
 		atk_count = skill_meta["atk_count"]
+	elif atk_type == base.atk_type.PROP:
+		var prop_ids_list = World_Helper.get_component_property_list("prop", "prop_ids")
+		var prop_ids = prop_ids_list[atk_index]
+		var prop_id = prop_ids[extra_index]
+		Log_Helper.log(["[attack] ----->> ", atk_index, " use prop id: ", prop_id])
+		var prop_meta = Meta_Helper.get_prop(prop_id)
+		atk_distance = prop_meta["atk_distance"]
+		atk_count = prop_meta["atk_count"]
 	var can_be_atk_index_list = []
 	var length = be_attack_index_list.size()
 	for atk_range_index in range(atk_distance):
@@ -202,85 +236,137 @@ func _do_attack(index):
 	var length = hp_list.size()
 	# 本次攻击伤害
 	if hp_list[index] > 0:
-		var be_atk_index_list = get_be_attack_index_list(index, base.atk_type.NORMAL, -1)
+		var be_atk_index_list = _get_be_attack_index_list(index, base.atk_type.NORMAL, -1)
 		for be_atk_index in be_atk_index_list:
 			if be_atk_index < length and be_atk_index >= 0 and hp_list[be_atk_index] > 0:
 				is_do = true
-				var damage = get_damage(index, be_atk_index, -1)
+				var damage = _get_damage(index, be_atk_index, -1, -1)
 				Log_Helper.log(["[attack] ----->> ", index ," vs ", be_atk_index, ", damage: ", damage])
 				# 反击即伤害的同时对对方造成无闪避无反击的伤害
 				var counter_damage = 0
-				var is_counter = get_is_counter(be_atk_index)
+				var is_counter = _get_is_counter(be_atk_index)
 				if is_counter:
 					# 反击伤害 = 无闪避无反击的伤害
-					counter_damage = get_damage(be_atk_index, index, -1)
+					counter_damage = _get_damage(be_atk_index, index, -1, -1)
 					Log_Helper.log(["[attack] ----->> ", be_atk_index, ", counter_damage: ", counter_damage])
 				# 扣减敌方血量 = 伤害 - 护盾
 				if damage > 0:
 					# 伤害 = 闪避 ? 0 : 伤害
-					var is_dodge = get_is_dodge(be_atk_index)
+					var is_dodge = _get_is_dodge(be_atk_index)
 					if is_dodge:
 						damage = 0
 						Log_Helper.log(["[attack] ----->> ", be_atk_index, " dodge !!!"])
 					else:
-						update_hp_and_shield(be_atk_index, damage)
+						_update_hp_and_shield(be_atk_index, damage)
 				# 扣减我方血量 = 伤害 - 护盾
 				if counter_damage > 0:
-					update_hp_and_shield(index, counter_damage)
+					_update_hp_and_shield(index, counter_damage)
+				# TODO 更新熟练度，更新耐久，更新蓝，更新道具数量
 	return is_do
 
-func _do_prop_attack(index):
+func _do_prop_attack(index, prop_index):
 	var is_do = false
+	var hp_list = World_Helper.get_component_property_list("hp", "hp")
+	var length = hp_list.size()
+	# 本次道具伤害
+	if hp_list[index] > 0:
+		var be_atk_index_list = _get_be_attack_index_list(index, base.atk_type.PROP, prop_index)
+		for be_atk_index in be_atk_index_list:
+			if be_atk_index < length and be_atk_index >= 0 and hp_list[be_atk_index] > 0:
+				is_do = true
+				var damage = _get_damage(index, be_atk_index, -1, prop_index)
+				Log_Helper.log(["[attack] ----->> ", index ," vs ", be_atk_index, ", damage: ", damage])
+				if damage > 0:
+					_update_hp_and_shield(be_atk_index, damage)
 	return is_do
 
-func _do_skill_attack(index):
+func _do_skill_attack(index, skill_index):
 	var is_do = false
 	var hp_list = World_Helper.get_component_property_list("hp", "hp")
 	var length = hp_list.size()
 	# 本次技能伤害
 	if hp_list[index] > 0:
-		var skill_index = 0
-		var be_atk_index_list = get_be_attack_index_list(index, base.atk_type.SKILL, skill_index)
+		var be_atk_index_list = _get_be_attack_index_list(index, base.atk_type.SKILL, skill_index)
 		for be_atk_index in be_atk_index_list:
 			if be_atk_index < length and be_atk_index >= 0 and hp_list[be_atk_index] > 0:
 				is_do = true
-				# TODO 获取使用技能索引
-				var damage = get_damage(index, be_atk_index, skill_index)
+				var damage = _get_damage(index, be_atk_index, skill_index, -1)
 				Log_Helper.log(["[attack] ----->> ", index ," vs ", be_atk_index, ", damage: ", damage])
 				if damage > 0:
-					update_hp_and_shield(be_atk_index, damage)
+					_update_hp_and_shield(be_atk_index, damage)
 	return is_do
 
 func _get_atk_type(index):
 	var id_type_list = World_Helper.get_component_property_list("id", "id_type")
+	var skill_index_dict = World_Helper.get_skill_index_dict()
+	var prop_index_dict = World_Helper.get_prop_index_dict()
 	var atk_id_type = id_type_list[index]
 	var atk_type = base.atk_type.NORMAL
+	var extra_index = -1
 	if atk_id_type == base.type.PEOPLE:
-		atk_type = base.atk_type.SKILL
-	return atk_type
+		if skill_index_dict.has(index):
+			extra_index = skill_index_dict[index]
+			var skill_ids_list = World_Helper.get_component_property_list("skill", "skill_ids")
+			var mana_list = World_Helper.get_component_property_list("mana", "mana")
+			var mana = mana_list[index]
+			var skill_ids = skill_ids_list[index]
+			var skill_id = skill_ids[extra_index]
+			var skill_meta = Meta_Helper.get_skill(skill_id)
+			# 技能攻击 = 配置表中的技能攻击
+			var skill_mana = skill_meta["mana"]
+			# 判断蓝耗尽使用物理攻击
+			if mana >= skill_mana:
+				mana -= skill_mana
+				mana_list[index] = mana
+				Log_Helper.log(["[attack] ----->> ", index, " use skill id: ", skill_id, " mana: ", mana])
+				atk_type = base.atk_type.SKILL
+			else:
+				extra_index = -1
+				Log_Helper.log(["[attack] ----->> ", index, " no use skill id: ", skill_id])
+		
+		if prop_index_dict.has(index):
+			extra_index = prop_index_dict[index]
+			var prop_ids_list = World_Helper.get_component_property_list("prop", "prop_ids")
+			var prop_ids_count_list = World_Helper.get_component_property_list("prop", "prop_ids_count")
+			var prop_ids = prop_ids_list[index]
+			var prop_ids_count = prop_ids_count_list[index]
+			var prop_id = prop_ids[extra_index]
+			var prop_count = prop_ids_count[extra_index]
+			# 判断次数耗尽使用物理攻击
+			if prop_count > 0:
+				prop_count -= 1
+				prop_ids_count[extra_index] = prop_count
+				Log_Helper.log(["[attack] ----->> ", index, " use prop id: ", prop_id, " count: ", prop_count])
+				var prop_meta = Meta_Helper.get_prop(prop_id)
+				atk_type = base.atk_type.PROP
+				# TEST data: sim use skill
+				World_Helper.set_skill_index_by_key(1, 0)
+			else:
+				extra_index = -1
+				Log_Helper.log(["[attack] ----->> ", index, " no use prop id: ", prop_id])
+	return [atk_type, extra_index]
 
 func update(delta):
 	if World_Helper.game_state_flag == base.game_state.FIGHT:
 		var attack_index_list = World_Helper.get_attack_index_list()
-		
-		var hp_list = World_Helper.get_component_property_list("hp", "hp")
-		
 		var length = attack_index_list.size()
 		var count = 0
 		# 攻击敌方单位
 		for index in attack_index_list:
 			# 选择攻击方式（默认物理攻击，技能、道具为主动使用）
 			var is_do = false
-			var atk_type = _get_atk_type(index)
+			var result = _get_atk_type(index)
+			var atk_type = result[0]
+			var extra_index = result[1]
 			if atk_type == base.atk_type.NORMAL:
 				# 物理攻击
 				is_do = _do_attack(index)
 			elif atk_type == base.atk_type.PROP:
 				# 道具攻击
-				is_do = _do_prop_attack(index)
+				is_do = _do_prop_attack(index, extra_index)
 			elif atk_type == base.atk_type.SKILL:
 				# 技能攻击
-				is_do = _do_skill_attack(index)
+				is_do = _do_skill_attack(index, extra_index)
 			if is_do:
 				count += 1
 			# 更新对应数据

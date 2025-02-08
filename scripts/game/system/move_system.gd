@@ -66,5 +66,5 @@ func update(delta):
 				#components[index].last_distance = distance
 		Log_Helper.log(["[move] last_distance: ", last_distance_list, ", attack index: ", min_indexs])
 		
-		World_Helper.game_state_flag = base.game_state.FIGHT
+		World_Helper.game_state_flag = base.game_state.USE_PROP
 		_start_move_flag = false

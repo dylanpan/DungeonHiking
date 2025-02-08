@@ -4,6 +4,7 @@ class_name Meta_Helper
 static var _people_map := {}
 static var _monster_map := {}
 static var _skill_map := {}
+static var _prop_map := {}
 static var _buff_map := {}
 
 static func init():
@@ -13,8 +14,10 @@ static func init():
 			"level": 1,
 			"exp": 10,
 			"skill_ids": ["1"],
+			"prop_ids": ["1","2"],
+			"prop_ids_count": [2,1],
 			"hp": 100,
-			"mana": 1,
+			"mana": 100,
 			"def": 100,
 			"shield": 1,
 			"atk": 10,
@@ -42,6 +45,8 @@ static func init():
 			"level": 10,
 			"exp": 20,
 			"skill_ids": [],
+			"prop_ids": [],
+			"prop_ids_count": [],
 			"hp": 100,
 			"mana": 100,
 			"def": 10,
@@ -68,6 +73,7 @@ static func init():
 	_skill_map = {
 		"1": {
 			"id": "1",
+			"mana": 80,
 			"atk": 1,
 			"def": 0,
 			"atk_distance": 3,
@@ -77,6 +83,38 @@ static func init():
 			"fire_element_atk": 20,
 			"fire_element_def": 0,
 			"thunder_element_atk": 0,
+			"thunder_element_def": 0,
+			"wind_element_atk": 0,
+			"wind_element_def": 0,
+		}
+	}
+	_prop_map = {
+		"1": {
+			"id": "1",
+			"atk": 1,
+			"def": 0,
+			"atk_distance": 2,
+			"atk_count": 2,
+			"earth_element_atk": 0,
+			"earth_element_def": 0,
+			"fire_element_atk": 0,
+			"fire_element_def": 0,
+			"thunder_element_atk": 30,
+			"thunder_element_def": 0,
+			"wind_element_atk": 0,
+			"wind_element_def": 0,
+		},
+		"2": {
+			"id": "2",
+			"atk": 1,
+			"def": 0,
+			"atk_distance": 2,
+			"atk_count": 2,
+			"earth_element_atk": 0,
+			"earth_element_def": 0,
+			"fire_element_atk": 0,
+			"fire_element_def": 0,
+			"thunder_element_atk": 3,
 			"thunder_element_def": 0,
 			"wind_element_atk": 0,
 			"wind_element_def": 0,
@@ -104,4 +142,10 @@ static func get_skill(id: String):
 	var meta := {}
 	if id in _skill_map:
 		meta = _skill_map[id]
+	return meta
+
+static func get_prop(id: String):
+	var meta := {}
+	if id in _prop_map:
+		meta = _prop_map[id]
 	return meta

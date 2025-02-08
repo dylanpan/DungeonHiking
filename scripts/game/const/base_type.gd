@@ -33,5 +33,6 @@ enum game_state {
 	PRE_START = 2,
 	MOVE = 3,
 	FIGHT = 4,
-	END = 5,
+	USE_PROP = 5,
+	END = 6,
 }

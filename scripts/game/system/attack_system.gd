@@ -173,9 +173,9 @@ func _get_is_dodge(be_atk_index):
 
 func _get_be_attack_index_list(atk_index, atk_type, extra_index):
 	# all [0,1,2,3,4]
-	# atk    [0]
+	# atk	[0]
 	# be_atk [1,2,3,4]
-	# atk    [0] - 2
+	# atk	[0] - 2
 	# be_atk [1,2]
 	# 根据攻击距离选择被攻击单位
 	var id_type_list = World_Helper.get_component_property_list("id", "id_type")
@@ -194,8 +194,6 @@ func _get_be_attack_index_list(atk_index, atk_type, extra_index):
 	var atk_distance = atk_distance_list[atk_index]
 	var atk_count = atk_count_list[atk_index]
 	if atk_type == base.atk_type.SKILL:
-		# TODO 实现 4 回合 10 点火属性伤害，晕眩 2 回合
-		# TODO 实现 3 回合增加 10 点暴击率
 		var skill_ids_list = World_Helper.get_component_property_list("skill", "skill_ids")
 		var skill_ids = skill_ids_list[atk_index]
 		var skill_id = skill_ids[extra_index]
@@ -276,9 +274,11 @@ func _do_prop_attack(index, prop_index):
 			if be_atk_index < length and be_atk_index >= 0 and hp_list[be_atk_index] > 0:
 				is_do = true
 				var damage = _get_damage(index, be_atk_index, -1, prop_index)
-				Log_Helper.log(["[attack] ----->> ", index ," vs ", be_atk_index, ", damage: ", damage])
+				Log_Helper.log(["[attack] ----->> ", index ," vs ", be_atk_index, ", prop damage: ", damage])
 				if damage > 0:
 					_update_hp_and_shield(be_atk_index, damage)
+				# 添加buff效果处理
+				_apply_buff(index, be_atk_index, -1, prop_index)
 	return is_do
 
 func _do_skill_attack(index, skill_index):
@@ -292,9 +292,11 @@ func _do_skill_attack(index, skill_index):
 			if be_atk_index < length and be_atk_index >= 0 and hp_list[be_atk_index] > 0:
 				is_do = true
 				var damage = _get_damage(index, be_atk_index, skill_index, -1)
-				Log_Helper.log(["[attack] ----->> ", index ," vs ", be_atk_index, ", damage: ", damage])
+				Log_Helper.log(["[attack] ----->> ", index ," vs ", be_atk_index, ", skill damage: ", damage])
 				if damage > 0:
 					_update_hp_and_shield(be_atk_index, damage)
+				# 添加buff效果处理
+				_apply_buff(index, be_atk_index, skill_index, -1)
 	return is_do
 
 func _get_atk_type(index):
@@ -303,15 +305,16 @@ func _get_atk_type(index):
 	var prop_index_dict = World_Helper.get_prop_index_dict()
 	var atk_id_type = id_type_list[index]
 	var atk_type = base.atk_type.NORMAL
-	var extra_index = -1
+	var skill_index = -1
+	var prop_index = -1
 	if atk_id_type == base.type.PEOPLE:
 		if skill_index_dict.has(index):
-			extra_index = skill_index_dict[index]
+			skill_index = skill_index_dict[index]
 			var skill_ids_list = World_Helper.get_component_property_list("skill", "skill_ids")
 			var mana_list = World_Helper.get_component_property_list("mana", "mana")
 			var mana = mana_list[index]
 			var skill_ids = skill_ids_list[index]
-			var skill_id = skill_ids[extra_index]
+			var skill_id = skill_ids[skill_index]
 			var skill_meta = Meta_Helper.get_skill(skill_id)
 			# 技能攻击 = 配置表中的技能攻击
 			var skill_mana = skill_meta["mana"]
@@ -322,32 +325,64 @@ func _get_atk_type(index):
 				Log_Helper.log(["[attack] ----->> ", index, " use skill id: ", skill_id, " mana: ", mana])
 				atk_type = base.atk_type.SKILL
 			else:
-				extra_index = -1
+				skill_index = -1
 				Log_Helper.log(["[attack] ----->> ", index, " no use skill id: ", skill_id])
 		
 		if prop_index_dict.has(index):
-			extra_index = prop_index_dict[index]
+			prop_index = prop_index_dict[index]
 			var prop_ids_list = World_Helper.get_component_property_list("prop", "prop_ids")
 			var prop_ids_count_list = World_Helper.get_component_property_list("prop", "prop_ids_count")
 			var prop_ids = prop_ids_list[index]
 			var prop_ids_count = prop_ids_count_list[index]
-			var prop_id = prop_ids[extra_index]
-			var prop_count = prop_ids_count[extra_index]
+			var prop_id = prop_ids[prop_index]
+			var prop_count = prop_ids_count[prop_index]
 			# 判断次数耗尽使用物理攻击
 			if prop_count > 0:
 				prop_count -= 1
-				prop_ids_count[extra_index] = prop_count
+				prop_ids_count[prop_index] = prop_count
 				Log_Helper.log(["[attack] ----->> ", index, " use prop id: ", prop_id, " count: ", prop_count])
 				atk_type = base.atk_type.PROP
 				# TEST data: sim use skill
 				World_Helper.set_skill_index_by_key(1, 0)
 			else:
-				extra_index = -1
+				prop_index = -1
 				Log_Helper.log(["[attack] ----->> ", index, " no use prop id: ", prop_id])
-	return [atk_type, extra_index]
+	return [atk_type, skill_index, prop_index]
+
+func _apply_buff(atk_index: int, be_atk_index: int, skill_index: int, prop_index: int):
+	var buff_id = ""
+	
+	# 获取要应用的buff_id
+	if prop_index >= 0:
+		var prop_ids_list = World_Helper.get_component_property_list("prop", "prop_ids")
+		var prop_id = prop_ids_list[atk_index][prop_index]
+		var prop_meta = Meta_Helper.get_prop(prop_id)
+		buff_id = prop_meta["buff_id"]
+
+	if skill_index >= 0:
+		var skill_ids_list = World_Helper.get_component_property_list("skill", "skill_ids")
+		var skill_id = skill_ids_list[atk_index][skill_index]
+		var skill_meta = Meta_Helper.get_skill(skill_id)
+		buff_id = skill_meta["buff_id"]
+
+	# 如果有buff效果则添加
+	if buff_id != "":
+		var buff_ids_list = World_Helper.get_component_property_list("buff", "buff_ids")
+		var buff_ids = buff_ids_list[be_atk_index]
+		
+		# 添加新buff_id并初始化回合数
+		Log_Helper.log(["[attack] ", atk_index, " set buff to ", be_atk_index, " buff_id: ", buff_id])
+		if not buff_id in buff_ids:
+			# 创建新数组避免共享引用
+			var new_buff_ids = buff_ids.duplicate()
+			new_buff_ids.append(buff_id)
+			buff_ids_list[be_atk_index] = new_buff_ids
+			# 初始化buff回合数
+			World_Helper.init_buff_turns(be_atk_index, buff_id)
 
 func update(delta):
 	if World_Helper.game_state_flag == base.game_state.FIGHT:
+		Log_Helper.log(["[attack] system run ----->> "])
 		var attack_index_list = World_Helper.get_attack_index_list()
 		var length = attack_index_list.size()
 		var count = 0
@@ -357,16 +392,17 @@ func update(delta):
 			var is_do = false
 			var result = _get_atk_type(index)
 			var atk_type = result[0]
-			var extra_index = result[1]
+			var skill_index = result[1]
+			var prop_index = result[2]
 			if atk_type == base.atk_type.NORMAL:
 				# 物理攻击
 				is_do = _do_attack(index)
 			elif atk_type == base.atk_type.PROP:
 				# 道具攻击
-				is_do = _do_prop_attack(index, extra_index)
+				is_do = _do_prop_attack(index, prop_index)
 			elif atk_type == base.atk_type.SKILL:
 				# 技能攻击
-				is_do = _do_skill_attack(index, extra_index)
+				is_do = _do_skill_attack(index, skill_index)
 			if is_do:
 				count += 1
 			# 更新对应数据

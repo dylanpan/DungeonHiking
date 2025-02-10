@@ -14,9 +14,9 @@ func destroy():
 # 假定一条路径，所有单位开始向前移动，谁先到终点，谁进行攻击，然后重回起点，其他单位保持原地继续进行
 func update(delta):
 	if !_start_move_flag and World_Helper.game_state_flag == base.game_state.MOVE:
+		Log_Helper.log(["[move] system run ----->> "])
 		_start_move_flag = true
 		
-		var components = World_Helper.get_components("speed")
 		var speed_list = World_Helper.get_component_property_list("speed", "speed")
 		var hp_list = World_Helper.get_component_property_list("hp", "hp")
 		var last_distance_list = World_Helper.get_component_property_list("speed", "last_distance")
@@ -57,14 +57,12 @@ func update(delta):
 		for index in range(tmp_time.size()):
 			if index in min_indexs:
 				last_distance_list[index] = 0
-				#components[index].last_distance = 0
 			else:
 				var last_distance = last_distance_list[index]
 				var speed = speed_list[index]
 				var distance = min(last_distance + min_time * speed, max_distance)
 				last_distance_list[index] = distance
-				#components[index].last_distance = distance
 		Log_Helper.log(["[move] last_distance: ", last_distance_list, ", attack index: ", min_indexs])
 		
-		World_Helper.game_state_flag = base.game_state.USE_PROP
+		World_Helper.game_state_flag = base.game_state.BUFF
 		_start_move_flag = false

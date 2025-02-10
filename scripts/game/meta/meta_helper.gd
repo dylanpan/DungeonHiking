@@ -5,7 +5,7 @@ static var _people_map := {}
 static var _monster_map := {}
 static var _skill_map := {}
 static var _prop_map := {}
-static var _buff_map := {}
+static var _buff_map := {} # 新增 buff 配置映射
 
 static func init():
 	_people_map = {
@@ -16,6 +16,7 @@ static func init():
 			"skill_ids": ["1"],
 			"prop_ids": ["1","2"],
 			"prop_ids_count": [2,1],
+			"buff_ids": [],
 			"hp": 100,
 			"mana": 100,
 			"def": 100,
@@ -50,7 +51,8 @@ static func init():
 			"skill_ids": [],
 			"prop_ids": [],
 			"prop_ids_count": [],
-			"hp": 100,
+			"buff_ids": [],
+			"hp": 300,
 			"mana": 100,
 			"def": 10,
 			"shield": 20,
@@ -89,6 +91,7 @@ static func init():
 			"thunder_element_def": 0,
 			"wind_element_atk": 0,
 			"wind_element_def": 0,
+			"buff_id": "9"
 		}
 	}
 	_prop_map = {
@@ -106,6 +109,7 @@ static func init():
 			"thunder_element_def": 0,
 			"wind_element_atk": 0,
 			"wind_element_def": 0,
+			"buff_id": ""
 		},
 		"2": {
 			"id": "2",
@@ -121,26 +125,45 @@ static func init():
 			"thunder_element_def": 0,
 			"wind_element_atk": 0,
 			"wind_element_def": 0,
+			"buff_id": "2"
 		}
 	}
 	_buff_map = {
 		"1": {
 			"id": "1",
+			"turn": 3,          # 持续回合数
+			"type": base.buff_type.STUN,  # buff类型
+			"desc": "STUN",      # buff描述
+			"value": 0,         # buff效果值(晕眩类型不需要)
+		},
+		"2": {
+			"id": "2", 
+			"turn": 4,
+			"type": base.buff_type.BLEED,
+			"desc": "BLEED",
+			"value": 10,        # 每回合流血伤害
+		},
+		"3": {
+			"id": "3",
+			"turn": 3, 
+			"type": base.buff_type.SILENCE,
+			"desc": "SILENCE",
+			"value": 0,
+		},
+		"4": {
+			"id": "4",
 			"turn": 3,
-			"type": 2,
-			"atk": 1,
-			"def": 0,
-			"atk_distance": 2,
-			"atk_count": 2,
-			"earth_element_atk": 0,
-			"earth_element_def": 0,
-			"fire_element_atk": 0,
-			"fire_element_def": 0,
-			"thunder_element_atk": 3,
-			"thunder_element_def": 0,
-			"wind_element_atk": 0,
-			"wind_element_def": 0,
-		}
+			"type": base.buff_type.WEAKEN,
+			"desc": "WEAKEN",
+			"value": 20,        # 降低攻击力数值
+		},
+		"9": {
+			"id": "9", 
+			"turn": 4,
+			"type": base.buff_type.FIRE_HIT,
+			"desc": "FIRE_HIT",
+			"value": 10,        # 每回合火属性伤害
+		},
 	}
 
 static func get_people(id: String):
@@ -165,4 +188,11 @@ static func get_prop(id: String):
 	var meta := {}
 	if id in _prop_map:
 		meta = _prop_map[id]
+	return meta
+
+# 新增获取buff配置的方法
+static func get_buff(id: String) -> Dictionary:
+	var meta := {}
+	if id in _buff_map:
+		meta = _buff_map[id]
 	return meta

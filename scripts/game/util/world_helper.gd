@@ -2,7 +2,7 @@ class_name World_Helper
 
 static var _game_state_flag: base.game_state = base.game_state.NONE
 ## 游戏状态标识
-static var game_state_flag: base.game_state:
+static var game_state_flag: base.game_state = base.game_state.NONE:
 	get:
 		return _game_state_flag
 	set(value):
@@ -73,6 +73,7 @@ static var _component_name_map = {
 	"atk_distance": "Atk_Component",
 	"atk_count": "Atk_Component",
 	"skill_ids": "Skill_Component",
+	"buff_ids": "Buff_Component",
 	"prop_ids": "Prop_Component",
 	"prop_ids_count": "Prop_Component",
 	"counter_rate": "Counter_Component",
@@ -159,6 +160,62 @@ static func get_prop_index_dict() -> Dictionary:
 	return _prop_index_dict
 #endregion
 
+#endregion
+
+#region Buff 相关数据处理
+static var _cannot_move_list := []
+# 修改为二维映射: entity_index -> (buff_id -> turns)
+static var _buff_turns_map := {} 
+
+static func set_cannot_move(index: int):
+	if not index in _cannot_move_list:
+		_cannot_move_list.append(index)
+
+static func can_move(index: int) -> bool:
+	return not index in _cannot_move_list
+
+static func clear_cannot_move():
+	_cannot_move_list.clear()
+
+# 初始化指定单位的buff回合数
+static func init_buff_turns(index: int, buff_id: String):
+	# 确保实体的buff记录存在
+	if not index in _buff_turns_map:
+		_buff_turns_map[index] = {}
+	
+	# 初始化该实体的指定buff回合数
+	if not buff_id in _buff_turns_map[index]:
+		var buff_meta = Meta_Helper.get_buff(buff_id)
+		_buff_turns_map[index][buff_id] = buff_meta["turn"]
+
+# 获取指定单位的buff剩余回合数
+static func get_buff_turns(index: int, buff_id: String) -> int:
+	var turns = 0
+	if index in _buff_turns_map and buff_id in _buff_turns_map[index]:
+		turns = _buff_turns_map[index][buff_id]
+	return turns
+
+# 获取指定单位的buff列表
+static func get_buff_ids_turns(index: int) -> Dictionary:
+	var turns := {}
+	if index in _buff_turns_map:
+		turns = _buff_turns_map[index]
+	return turns
+
+# 减少指定单位的buff回合数
+static func decrease_buff_turns(index: int, buff_id: String) -> void:
+	if index in _buff_turns_map and buff_id in _buff_turns_map[index]:
+		_buff_turns_map[index][buff_id] -= 1
+		if _buff_turns_map[index][buff_id] <= 0:
+			_buff_turns_map[index].erase(buff_id)
+			# 如果该实体没有任何buff了,清理掉实体记录
+			if _buff_turns_map[index].is_empty():
+				_buff_turns_map.erase(index)
+
+# 清理指定单位的所有buff记录
+static func clear_entity_buff_turns(index: int) -> void:
+	if index in _buff_turns_map:
+		_buff_turns_map.erase(index)
 #endregion
 
 #region 打印日志

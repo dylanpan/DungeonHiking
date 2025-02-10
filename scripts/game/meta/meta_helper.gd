@@ -17,7 +17,7 @@ static func init():
 			"prop_ids": ["1","2"],
 			"prop_ids_count": [2,1],
 			"buff_ids": [],
-			"hp": 100,
+			"hp": 110,
 			"mana": 100,
 			"def": 100,
 			"shield": 1,
@@ -52,13 +52,13 @@ static func init():
 			"prop_ids": [],
 			"prop_ids_count": [],
 			"buff_ids": [],
-			"hp": 300,
+			"hp": 150,
 			"mana": 100,
 			"def": 10,
 			"shield": 20,
 			"atk": 40,
 			"atk_speed": 1,
-			"atk_distance": 1,
+			"atk_distance": 2,
 			"atk_count": 1,
 			"counter_rate": 1,
 			"critical_rate": 1,
@@ -91,7 +91,7 @@ static func init():
 			"thunder_element_def": 0,
 			"wind_element_atk": 0,
 			"wind_element_def": 0,
-			"buff_id": "9"
+			"buff_id": "3"
 		}
 	}
 	_prop_map = {
@@ -125,7 +125,7 @@ static func init():
 			"thunder_element_def": 0,
 			"wind_element_atk": 0,
 			"wind_element_def": 0,
-			"buff_id": "2"
+			"buff_id": "5"
 		}
 	}
 	_buff_map = {
@@ -137,32 +137,60 @@ static func init():
 			"value": 0,         # buff效果值(晕眩类型不需要)
 		},
 		"2": {
-			"id": "2", 
-			"turn": 4,
-			"type": base.buff_type.BLEED,
-			"desc": "BLEED",
-			"value": 10,        # 每回合流血伤害
-		},
-		"3": {
-			"id": "3",
+			"id": "2",
 			"turn": 3, 
 			"type": base.buff_type.SILENCE,
 			"desc": "SILENCE",
 			"value": 0,
 		},
-		"4": {
-			"id": "4",
+		"3": {
+			"id": "3",
 			"turn": 3,
 			"type": base.buff_type.WEAKEN,
 			"desc": "WEAKEN",
-			"value": 20,        # 降低攻击力数值
+			"value": 10,        # 降低全属性5%
 		},
-		"9": {
-			"id": "9", 
+		"4": {
+			"id": "4",
+			"turn": 3,
+			"type": base.buff_type.IMMUNITY,
+			"desc": "IMMUNITY",
+			"value": 0,
+		},
+		"5": {
+			"id": "5",
+			"turn": 3,
+			"type": base.buff_type.BLEED,
+			"desc": "BLEED",
+			"value": 10,        # 每回合伤害
+		},
+		"6": {
+			"id": "6",
+			"turn": 4,
+			"type": base.buff_type.EARTH_HIT,
+			"desc": "EARTH_HIT",
+			"value": 0,        # 每回合土属性伤害
+		},
+		"7": {
+			"id": "7",
+			"turn": 4,
+			"type": base.buff_type.THUNDER_HIT,
+			"desc": "THUNDER_HIT",
+			"value": 0,        # 每回合雷属性伤害
+		},
+		"8": {
+			"id": "8", 
 			"turn": 4,
 			"type": base.buff_type.FIRE_HIT,
 			"desc": "FIRE_HIT",
 			"value": 10,        # 每回合火属性伤害
+		},
+		"9": {
+			"id": "9", 
+			"turn": 4,
+			"type": base.buff_type.WIND_HIT,
+			"desc": "WIND_HIT",
+			"value": 10,        # 每回合风属性伤害
 		},
 	}
 

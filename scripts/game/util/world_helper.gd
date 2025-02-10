@@ -141,6 +141,7 @@ static func get_attack_index_list() -> Array:
 static var _skill_index_dict := {}
 static func set_skill_index_dict(value: Dictionary):
 	_skill_index_dict = value
+
 static func set_skill_index_by_key(key: int, value: int):
 	_skill_index_dict[key] = value
 
@@ -153,6 +154,7 @@ static func get_skill_index_dict() -> Dictionary:
 static var _prop_index_dict := {}
 static func set_prop_index_dict(value: Dictionary):
 	_prop_index_dict = value
+
 static func set_prop_index_by_key(key: int, value: int):
 	_prop_index_dict[key] = value
 
@@ -163,19 +165,8 @@ static func get_prop_index_dict() -> Dictionary:
 #endregion
 
 #region Buff 相关数据处理
-static var _cannot_move_list := []
 # 修改为二维映射: entity_index -> (buff_id -> turns)
 static var _buff_turns_map := {} 
-
-static func set_cannot_move(index: int):
-	if not index in _cannot_move_list:
-		_cannot_move_list.append(index)
-
-static func can_move(index: int) -> bool:
-	return not index in _cannot_move_list
-
-static func clear_cannot_move():
-	_cannot_move_list.clear()
 
 # 初始化指定单位的buff回合数
 static func init_buff_turns(index: int, buff_id: String):
@@ -216,6 +207,110 @@ static func decrease_buff_turns(index: int, buff_id: String) -> void:
 static func clear_entity_buff_turns(index: int) -> void:
 	if index in _buff_turns_map:
 		_buff_turns_map.erase(index)
+#endregion
+
+#region Buff 状态标记
+static var _stun_list := []
+static var _silence_list := []
+static var _immunity_list := []
+
+# 无法移动
+static func set_stun(index: int):
+	if not index in _stun_list:
+		_stun_list.append(index)
+
+static func is_stun(index: int) -> bool:
+	return index in _stun_list
+
+static func clear_stun(index: int = -1):
+	if index >= 0:
+		# 清理指定单位的晕眩状态
+		_stun_list.erase(index)
+	else:
+		# 清理所有单位的晕眩状态
+		_stun_list.clear()
+
+# 无法使用技能
+static func set_silence(index: int):
+	if not index in _silence_list:
+		_silence_list.append(index)
+
+static func is_silence(index: int) -> bool:
+	return index in _silence_list
+
+static func clear_silence(index: int = -1):
+	if index >= 0:
+		# 清理指定单位的沉默状态
+		_silence_list.erase(index)
+	else:
+		# 清理所有单位的沉默状态
+		_silence_list.clear()
+
+# 免疫伤害
+static func set_immunity(index: int):
+	if not index in _immunity_list:
+		_immunity_list.append(index)
+
+static func is_immunity(index: int) -> bool:
+	return index in _immunity_list
+
+static func clear_immunity(index: int = -1):
+	if index >= 0:
+		# 清理指定单位的免疫状态
+		_immunity_list.erase(index)
+	else:
+		# 清理所有单位的免疫状态
+		_immunity_list.clear()
+
+# 清理所有buff状态
+static func clear_buff_states(index: int = -1):
+	if index >= 0:
+		# 清理指定单位的所有buff状态
+		clear_stun(index)
+		clear_silence(index)
+		clear_immunity(index)
+	else:
+		# 清理所有单位的所有buff状态
+		_stun_list.clear()
+		_silence_list.clear()
+		_immunity_list.clear()
+#endregion
+
+#region 属性修改记录
+static var _origin_property_map := {} # entity_index -> {component_name -> {property_name -> value}}
+
+# 记录原始属性值
+static func record_property(index: int, component_name: String, property_name: String, value) -> void:
+	if not index in _origin_property_map:
+		_origin_property_map[index] = {}
+	if not component_name in _origin_property_map[index]:
+		_origin_property_map[index][component_name] = {}
+	_origin_property_map[index][component_name][property_name] = value
+
+# 获取原始属性值
+static func get_origin_property(index: int, component_name: String, property_name: String):
+	if index in _origin_property_map and component_name in _origin_property_map[index]:
+		return _origin_property_map[index][component_name][property_name]
+	return null
+
+# 清除属性记录
+static func clear_property_record(index: int = -1) -> void:
+	if index >= 0:
+		_origin_property_map.erase(index)
+	else:
+		_origin_property_map.clear()
+
+# 修改属性值(按百分比)
+static func modify_property_by_percent(index: int, percent: float, properties: Array) -> void:
+	for prop in properties:
+		var component_name = prop[0]
+		var property_name = prop[1]
+		var property_list = get_component_property_list(component_name, property_name)
+		var current_value = property_list[index]
+		# 记录原始值
+		record_property(index, component_name, property_name, current_value)
+		# 应用修改
+		property_list[index] = current_value * (1 - percent)
 #endregion
 
 #region 打印日志

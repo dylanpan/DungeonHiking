@@ -308,8 +308,7 @@ func _get_atk_type(index):
 	var skill_index = -1
 	var prop_index = -1
 	if atk_id_type == base.type.PEOPLE:
-		if skill_index_dict.has(index):
-			skill_index = skill_index_dict[index]
+		if (not World_Helper.is_silence(index)) and skill_index_dict.has(index):
 			var skill_ids_list = World_Helper.get_component_property_list("skill", "skill_ids")
 			var mana_list = World_Helper.get_component_property_list("mana", "mana")
 			var mana = mana_list[index]
@@ -320,6 +319,7 @@ func _get_atk_type(index):
 			var skill_mana = skill_meta["mana"]
 			# 判断蓝耗尽使用物理攻击
 			if mana >= skill_mana:
+				skill_index = skill_index_dict[index]
 				mana -= skill_mana
 				mana_list[index] = mana
 				Log_Helper.log(["[attack] ----->> ", index, " use skill id: ", skill_id, " mana: ", mana])
@@ -329,7 +329,6 @@ func _get_atk_type(index):
 				Log_Helper.log(["[attack] ----->> ", index, " no use skill id: ", skill_id])
 		
 		if prop_index_dict.has(index):
-			prop_index = prop_index_dict[index]
 			var prop_ids_list = World_Helper.get_component_property_list("prop", "prop_ids")
 			var prop_ids_count_list = World_Helper.get_component_property_list("prop", "prop_ids_count")
 			var prop_ids = prop_ids_list[index]
@@ -338,6 +337,7 @@ func _get_atk_type(index):
 			var prop_count = prop_ids_count[prop_index]
 			# 判断次数耗尽使用物理攻击
 			if prop_count > 0:
+				prop_index = prop_index_dict[index]
 				prop_count -= 1
 				prop_ids_count[prop_index] = prop_count
 				Log_Helper.log(["[attack] ----->> ", index, " use prop id: ", prop_id, " count: ", prop_count])
@@ -388,6 +388,12 @@ func update(delta):
 		var count = 0
 		# 攻击敌方单位
 		for index in attack_index_list:
+			# 晕眩状态下跳过攻击
+			if World_Helper.is_stun(index):
+				Log_Helper.log(["[attack] ----->> ", index, " is stunned, skip attack"])
+				count += 1
+				continue
+			
 			# 选择攻击方式（默认物理攻击，技能、道具为主动使用）
 			var is_do = false
 			var result = _get_atk_type(index)

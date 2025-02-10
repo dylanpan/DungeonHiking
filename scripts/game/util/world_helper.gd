@@ -313,6 +313,37 @@ static func modify_property_by_percent(index: int, percent: float, properties: A
 		property_list[index] = current_value * (1 - percent)
 #endregion
 
+#region 动画数据管理
+# 动画数据结构:
+# {
+#   type: base.animate_type,	# 动画类型 
+#   from_index: int,			# 发起者索引
+#   to_index: int,				# 目标索引
+#   value: float,				# 数值(伤害/治疗等)
+#   buff_id: String,			# buff ID(如果有)
+#   extra_data: Dictionary		# 额外数据
+# }
+static var _animate_list: Array[Dictionary] = []
+
+# 添加动画数据
+static func add_animate(animate_data: Dictionary) -> void:
+	_animate_list.append(animate_data)
+
+# 获取所有动画数据
+static func get_animates() -> Array[Dictionary]:
+	return _animate_list
+
+# 获取并清除所有动画数据
+static func pop_animates() -> Array[Dictionary]:
+	var animates = _animate_list.duplicate()
+	_animate_list.clear()
+	return animates
+
+# 清除所有动画数据  
+static func clear_animates() -> void:
+	_animate_list.clear()
+#endregion
+
 #region 打印日志
 static func print_class_properties(obj: Object):
 	var property_list = obj.get_property_list()

@@ -116,7 +116,12 @@ func _update_hp_and_shield(index, damage):
 	if shield > damage:
 		shield_list[index] -= damage
 		Log_Helper.log(["[attack] ----->>>> result: ", index, ", shield: ", shield_list[index], ", hp: ", hp_list[index]])
-		
+		# 记录护盾受击动画
+		World_Helper.add_animate({
+			"type": base.animate_type.SHIELD_HIT,
+			"to_index": index,
+			"value": damage
+		})
 		if World_Helper.game_state_flag == base.game_state.FIGHT:
 			World_Helper.game_state_flag = base.game_state.MOVE
 	else:
@@ -124,10 +129,29 @@ func _update_hp_and_shield(index, damage):
 			hp_list[index] -= damage - shield
 			shield_list[index] = 0
 			Log_Helper.log(["[attack] ----->>>> result: ", index, ", shield: ", shield_list[index], ", hp: ", hp_list[index]])
+			# 记录护盾破碎动画
+			if shield > 0:
+				World_Helper.add_animate({
+					"type": base.animate_type.SHIELD_BREAK,
+					"to_index": index,
+					"value": shield
+				})
+			
+			# 记录生命值变化动画
+			World_Helper.add_animate({
+				"type": base.animate_type.HP_CHANGE,
+				"to_index": index,
+				"value": -(damage - shield)
+			})
 			if hp_list[index] < 0:
 				hp_list[index] = 0
 				# TODO 出现掉落
 				
+				# 记录死亡动画
+				World_Helper.add_animate({
+					"type": base.animate_type.DEATH,
+					"to_index": index
+				})
 				if _is_none_atk(index):
 					World_Helper.game_state_flag = base.game_state.END
 				else:

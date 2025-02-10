@@ -37,7 +37,8 @@ enum game_state {
 	BUFF = 4,
 	FIGHT = 5,
 	USE_PROP = 6,
-	END = 7,
+	ANIMATE = 7,
+	END = 8,
 }
 
 ## 游戏内出现的 buff 类型枚举
@@ -62,4 +63,29 @@ enum buff_type {
 	FIRE_HIT = 9,
 	## 持续风伤
 	WIND_HIT = 10,
+}
+
+## 战斗动画类型枚举
+enum animate_type {
+	NONE = 0,
+	## 普通攻击
+	NORMAL_ATTACK = 1,
+	## 技能攻击
+	SKILL_ATTACK = 2,
+	## 道具攻击
+	PROP_ATTACK = 3,
+	## 反击   
+	COUNTER_ATTACK = 4,
+	## 闪避
+	DODGE = 5,
+	## 护盾受击
+	SHIELD_HIT = 6,
+	## 护盾破碎
+	SHIELD_BREAK = 7,
+	## 血量变化
+	HP_CHANGE = 8,
+	## Buff效果
+	BUFF_EFFECT = 9,
+	## 死亡
+	DEATH = 10,
 }

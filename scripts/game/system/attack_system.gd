@@ -195,6 +195,7 @@ func _get_be_attack_index_list(atk_index, atk_type, extra_index):
 	var atk_count = atk_count_list[atk_index]
 	if atk_type == base.atk_type.SKILL:
 		# TODO 实现 4 回合 10 点火属性伤害，晕眩 2 回合
+		# TODO 实现 3 回合增加 10 点暴击率
 		var skill_ids_list = World_Helper.get_component_property_list("skill", "skill_ids")
 		var skill_ids = skill_ids_list[atk_index]
 		var skill_id = skill_ids[extra_index]
@@ -261,7 +262,7 @@ func _do_attack(index):
 				# 扣减我方血量 = 伤害 - 护盾
 				if counter_damage > 0:
 					_update_hp_and_shield(index, counter_damage)
-				# TODO 更新熟练度，更新耐久，更新蓝，更新道具数量
+				# TODO 更新熟练度，更新耐久
 	return is_do
 
 func _do_prop_attack(index, prop_index):
@@ -337,7 +338,6 @@ func _get_atk_type(index):
 				prop_count -= 1
 				prop_ids_count[extra_index] = prop_count
 				Log_Helper.log(["[attack] ----->> ", index, " use prop id: ", prop_id, " count: ", prop_count])
-				var prop_meta = Meta_Helper.get_prop(prop_id)
 				atk_type = base.atk_type.PROP
 				# TEST data: sim use skill
 				World_Helper.set_skill_index_by_key(1, 0)

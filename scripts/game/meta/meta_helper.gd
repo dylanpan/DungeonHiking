@@ -37,6 +37,9 @@ static func init():
 			"thunder_element_def": 1,
 			"wind_element_atk": 1,
 			"wind_element_def": 1,
+			"accuracy": 100,
+			"hp_heal_rate": 1,
+			"mana_heal_rate": 1,
 		}
 	}
 	_monster_map = {
@@ -123,6 +126,20 @@ static func init():
 	_buff_map = {
 		"1": {
 			"id": "1",
+			"turn": 3,
+			"type": 2,
+			"atk": 1,
+			"def": 0,
+			"atk_distance": 2,
+			"atk_count": 2,
+			"earth_element_atk": 0,
+			"earth_element_def": 0,
+			"fire_element_atk": 0,
+			"fire_element_def": 0,
+			"thunder_element_atk": 3,
+			"thunder_element_def": 0,
+			"wind_element_atk": 0,
+			"wind_element_def": 0,
 		}
 	}
 

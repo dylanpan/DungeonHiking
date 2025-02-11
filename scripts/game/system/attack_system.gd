@@ -264,26 +264,49 @@ func _do_attack(index):
 			if be_atk_index < length and be_atk_index >= 0 and hp_list[be_atk_index] > 0:
 				is_do = true
 				var damage = _get_damage(index, be_atk_index, -1, -1)
+				# 添加普通攻击动画
+				World_Helper.add_animate({
+					"type": base.animate_type.NORMAL_ATTACK,
+					"from_index": index,
+					"to_index": be_atk_index,
+					"value": damage
+				})
 				Log_Helper.log(["[attack] ----->> ", index ," vs ", be_atk_index, ", damage: ", damage])
+				
+				# 处理反击
 				# 反击即伤害的同时对对方造成无闪避无反击的伤害
 				var counter_damage = 0
 				var is_counter = _get_is_counter(be_atk_index)
 				if is_counter:
 					# 反击伤害 = 无闪避无反击的伤害
 					counter_damage = _get_damage(be_atk_index, index, -1, -1)
+					# 添加反击动画
+					World_Helper.add_animate({
+						"type": base.animate_type.COUNTER_ATTACK,
+						"from_index": be_atk_index,
+						"to_index": index,
+						"value": counter_damage
+					})
 					Log_Helper.log(["[attack] ----->> ", be_atk_index, ", counter_damage: ", counter_damage])
+					# 扣减我方血量 = 伤害 - 护盾
+					if counter_damage > 0:
+						_update_hp_and_shield(index, counter_damage)
+				
 				# 扣减敌方血量 = 伤害 - 护盾
 				if damage > 0:
+					# 处理闪避
 					# 伤害 = 闪避 ? 0 : 伤害
 					var is_dodge = _get_is_dodge(be_atk_index)
 					if is_dodge:
 						damage = 0
+						# 添加闪避动画
+						World_Helper.add_animate({
+							"type": base.animate_type.DODGE,
+							"to_index": be_atk_index
+						})
 						Log_Helper.log(["[attack] ----->> ", be_atk_index, " dodge !!!"])
 					else:
 						_update_hp_and_shield(be_atk_index, damage)
-				# 扣减我方血量 = 伤害 - 护盾
-				if counter_damage > 0:
-					_update_hp_and_shield(index, counter_damage)
 				# TODO 更新熟练度，更新耐久
 	return is_do
 
@@ -298,6 +321,13 @@ func _do_prop_attack(index, prop_index):
 			if be_atk_index < length and be_atk_index >= 0 and hp_list[be_atk_index] > 0:
 				is_do = true
 				var damage = _get_damage(index, be_atk_index, -1, prop_index)
+				# 添加道具攻击动画
+				World_Helper.add_animate({
+					"type": base.animate_type.PROP_ATTACK,
+					"from_index": index,
+					"to_index": be_atk_index,
+					"value": damage
+				})
 				Log_Helper.log(["[attack] ----->> ", index ," vs ", be_atk_index, ", prop damage: ", damage])
 				if damage > 0:
 					_update_hp_and_shield(be_atk_index, damage)
@@ -316,6 +346,13 @@ func _do_skill_attack(index, skill_index):
 			if be_atk_index < length and be_atk_index >= 0 and hp_list[be_atk_index] > 0:
 				is_do = true
 				var damage = _get_damage(index, be_atk_index, skill_index, -1)
+				# 添加技能攻击动画
+				World_Helper.add_animate({
+					"type": base.animate_type.SKILL_ATTACK,
+					"from_index": index,
+					"to_index": be_atk_index,
+					"value": damage
+				})
 				Log_Helper.log(["[attack] ----->> ", index ," vs ", be_atk_index, ", skill damage: ", damage])
 				if damage > 0:
 					_update_hp_and_shield(be_atk_index, damage)
@@ -403,6 +440,16 @@ func _apply_buff(atk_index: int, be_atk_index: int, skill_index: int, prop_index
 			buff_ids_list[be_atk_index] = new_buff_ids
 			# 初始化buff回合数
 			World_Helper.init_buff_turns(be_atk_index, buff_id)
+			# 添加buff效果动画
+			World_Helper.add_animate({
+				"type": base.animate_type.BUFF_EFFECT,
+				"from_index": atk_index,
+				"to_index": be_atk_index,
+				"buff_id": buff_id,
+				"extra_data": {
+					"is_immunity": World_Helper.is_immunity(be_atk_index)
+				}
+			})
 
 func update(delta):
 	if World_Helper.game_state_flag == base.game_state.FIGHT:

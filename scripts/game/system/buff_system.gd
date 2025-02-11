@@ -15,6 +15,15 @@ func _effect_bleed(index: int, buff_id: String):
 	var buff_meta = Meta_Helper.get_buff(buff_id)
 	var damage = buff_meta["value"]
 	var desc = buff_meta["desc"]
+
+	# 添加流血效果动画
+	World_Helper.add_animate({
+		"type": base.animate_type.BUFF_EFFECT,
+		"to_index": index,
+		"buff_id": buff_id,
+		"value": damage
+	})
+
 	Log_Helper.log(["[buff] ----->> ", index ," buff: ", desc, ", damage: ", damage])
 	hp_list[index] = max(0, hp_list[index] - damage)
 	Log_Helper.log(["[buff] ----->> end hp: ", hp_list])
@@ -24,10 +33,18 @@ func _effect_stun(index: int, buff_id: String):
 	var buff_meta = Meta_Helper.get_buff(buff_id)
 	var damage = buff_meta["value"]
 	var desc = buff_meta["desc"]
+
+	# 添加晕眩效果动画
+	World_Helper.add_animate({
+		"type": base.animate_type.BUFF_EFFECT,
+		"to_index": index,
+		"buff_id": buff_id,
+	})
+
 	Log_Helper.log(["[buff] ----->> ", index ," buff: ", desc, ", damage: ", damage])
 	World_Helper.set_stun(index)
 
-# 弱化 - 包括攻击力、防御力等属性
+# 弱化 - 包括全体属性
 func _effect_weak(index: int, buff_id: String):
 	# 如果处于免疫状态,不能被弱化
 	if World_Helper.is_immunity(index):
@@ -37,6 +54,14 @@ func _effect_weak(index: int, buff_id: String):
 	var buff_meta = Meta_Helper.get_buff(buff_id)
 	var weaken_percent = buff_meta["value"] / 100.0
 	var desc = buff_meta["desc"]
+	
+	# 添加弱化效果动画
+	World_Helper.add_animate({
+		"type": base.animate_type.BUFF_EFFECT,
+		"to_index": index,
+		"buff_id": buff_id,
+		"value": weaken_percent * 100
+	})
 	
 	# 定义需要弱化的属性列表
 	var properties = [
@@ -60,6 +85,14 @@ func _effect_weak(index: int, buff_id: String):
 func _effect_silence(index: int, buff_id: String):
 	var buff_meta = Meta_Helper.get_buff(buff_id)
 	var desc = buff_meta["desc"]
+	
+	# 添加沉默效果动画
+	World_Helper.add_animate({
+		"type": base.animate_type.BUFF_EFFECT,
+		"to_index": index,
+		"buff_id": buff_id,
+	})
+
 	Log_Helper.log(["[buff] ----->> ", index ," buff: ", desc])
 	# 添加沉默状态标记,在attack_system中判断是否可以使用技能
 	World_Helper.set_silence(index)
@@ -68,6 +101,17 @@ func _effect_silence(index: int, buff_id: String):
 func _effect_immunity(index: int, buff_id: String):
 	var buff_meta = Meta_Helper.get_buff(buff_id)
 	var desc = buff_meta["desc"]
+	
+	# 添加被免疫的动画效果
+	World_Helper.add_animate({
+		"type": base.animate_type.BUFF_EFFECT,
+		"to_index": index,
+		"buff_id": buff_id,
+		"extra_data": {
+			"is_immunity": true
+		}
+	})
+
 	Log_Helper.log(["[buff] ----->> ", index ," buff: ", desc])
 	
 	# 设置免疫状态
@@ -107,11 +151,23 @@ func _effect_element_hit(index: int, buff_id: String, element_key: String, eleme
 	var hp_list = World_Helper.get_component_property_list("hp", "hp")
 	var element_def_list = World_Helper.get_component_property_list(element_key, element_def_type)
 	var buff_meta = Meta_Helper.get_buff(buff_id)
+	var buff_type = buff_meta["type"]
 	var element_atk = buff_meta["value"]
 	var element_def = element_def_list[index]
 	var element_def_max = 1000.0
 	var element_damage = element_atk * (1 - element_def / element_def_max)
 	var desc = buff_meta["desc"]
+	
+	# 添加持续元素属性伤害效果动画
+	World_Helper.add_animate({
+		"type": base.animate_type.BUFF_EFFECT,
+		"to_index": index,
+		"buff_id": buff_id,
+		"extra_data": {
+			"value": element_damage
+		}
+	})
+
 	Log_Helper.log(["[buff] ----->> ", index ," buff: ", desc, ", damage: ", element_damage])
 	hp_list[index] = max(0, hp_list[index] - element_damage)
 	Log_Helper.log(["[buff] ----->> end hp: ", hp_list])
@@ -135,14 +191,24 @@ func _effect_wind_hit(index: int, buff_id: String):
 func _process_buff_effect(index: int, buff_id: String):
 	# 通过buff_id获取buff配置
 	var buff_meta = Meta_Helper.get_buff(buff_id)
-	
+	var buff_type = buff_meta["type"]
+
 	# 如果单位处于免疫状态,且不是免疫buff本身,则不处理效果
-	if World_Helper.is_immunity(index) and buff_meta["type"] != base.buff_type.IMMUNITY:
+	if World_Helper.is_immunity(index) and buff_type != base.buff_type.IMMUNITY:
+		# 添加被免疫的动画效果
+		World_Helper.add_animate({
+			"type": base.animate_type.BUFF_EFFECT,
+			"to_index": index,
+			"buff_id": buff_id,
+			"extra_data": {
+				"is_immunity": true
+			}
+		})
 		Log_Helper.log(["[buff] ----->> ", index, " is immunity, ignore buff: ", buff_meta["desc"]])
 		return
 
 	# 根据buff类型处理效果
-	match buff_meta["type"]:
+	match buff_type:
 		base.buff_type.STUN:
 			_effect_stun(index, buff_id)
 		base.buff_type.SILENCE:

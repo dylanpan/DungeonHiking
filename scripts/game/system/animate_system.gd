@@ -2,7 +2,6 @@ class_name Animate_System
 extends I_System
 
 var _current_animate_index := -1
-var _animate_duration := 1.0  # 每个动画播放时长
 var _current_time := 0.0
 var _current_animates: Array[Dictionary] = []
 
@@ -124,12 +123,109 @@ func _play_hp_change(animate: Dictionary) -> void:
 	# TODO: 实现具体动画效果
 
 func _play_buff_effect(animate: Dictionary) -> void:
-	Log_Helper.log([
-		"[animate] Buff Effect on ",
-		animate.to_index,
-		" buff_id: ",
-		animate.buff_id
-	])
+	var buff_meta = Meta_Helper.get_buff(animate.buff_id)
+	var buff_type = buff_meta["type"]
+	var desc = buff_meta["desc"]
+	var value = animate.value
+	
+	match buff_type:
+		base.buff_type.STUN:
+			Log_Helper.log([
+				"[animate] Stun Effect on ",
+				animate.to_index,
+				" buff: ",
+				desc
+			])
+			
+		base.buff_type.SILENCE:
+			Log_Helper.log([
+				"[animate] Silence Effect on ",
+				animate.to_index,
+				" buff: ",
+				desc
+			])
+			
+		base.buff_type.WEAKEN:
+			Log_Helper.log([
+				"[animate] Weaken Effect on ",
+				animate.to_index,
+				" buff: ",
+				desc,
+				" value: ",
+				value,
+				"%"
+			])
+			
+		base.buff_type.IMMUNITY:
+			if animate.extra_data.get("is_immunity_gain", false):
+				# 获得免疫状态
+				Log_Helper.log([
+					"[animate] Gained Immunity Effect on ",
+					animate.to_index,
+					" buff: ",
+					desc
+				])
+			else:
+				# 免疫了其他效果
+				Log_Helper.log([
+					"[animate] Immune Effect on ",
+					animate.to_index,
+					" immune buff: ",
+					animate.buff_id,
+					" type: ",
+					desc
+				])
+			
+		base.buff_type.BLEED:
+			Log_Helper.log([
+				"[animate] Bleed Effect on ",
+				animate.to_index,
+				" buff: ",
+				desc,
+				" damage: ",
+				value
+			])
+			
+		base.buff_type.EARTH_HIT:
+			Log_Helper.log([
+				"[animate] Earth Hit Effect on ",
+				animate.to_index,
+				" buff: ",
+				desc,
+				" damage: ",
+				value
+			])
+			
+		base.buff_type.THUNDER_HIT:
+			Log_Helper.log([
+				"[animate] Thunder Hit Effect on ",
+				animate.to_index,
+				" buff: ",
+				desc,
+				" damage: ",
+				value
+			])
+			
+		base.buff_type.FIRE_HIT:
+			Log_Helper.log([
+				"[animate] Fire Hit Effect on ",
+				animate.to_index,
+				" buff: ",
+				desc,
+				" damage: ",
+				value
+			])
+			
+		base.buff_type.WIND_HIT:
+			Log_Helper.log([
+				"[animate] Wind Hit Effect on ",
+				animate.to_index,
+				" buff: ",
+				desc,
+				" damage: ",
+				value
+			])
+			
 	# TODO: 实现具体动画效果
 
 func _play_death(animate: Dictionary) -> void:
@@ -138,6 +234,22 @@ func _play_death(animate: Dictionary) -> void:
 		animate.to_index
 	])
 	# TODO: 实现具体动画效果
+
+func _get_animate_duration(animate_data: Dictionary) -> float:
+	var duration = 1.0
+	# 为不同类型的动画设置默认时长
+	match animate_data.type:
+		base.animate_type.NORMAL_ATTACK:
+			duration = 0.8  # 普通攻击较快
+		base.animate_type.SKILL_ATTACK:
+			duration = 1.2  # 技能攻击较慢
+		base.animate_type.BUFF_EFFECT:
+			duration = 1.0  # buff效果标准时长
+		base.animate_type.DEATH:
+			duration = 1.5  # 死亡动画较长
+		_:
+			duration = 1.0  # 默认时长
+	return duration
 
 func update(delta):
 	# 状态是动画播放时
@@ -154,8 +266,9 @@ func update(delta):
 			_play_current_animate()
 		
 		# 更新当前动画
+		var current_duration = _get_animate_duration(_current_animates[_current_animate_index])
 		_current_time += delta
-		if _current_time >= _animate_duration:
+		if _current_time >= current_duration:
 			_current_animate_index += 1
 			if _current_animate_index >= _current_animates.size():
 				# 所有动画播放完成

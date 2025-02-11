@@ -258,6 +258,11 @@ func update(delta):
 	if World_Helper.game_state_flag == base.game_state.BUFF:
 		Log_Helper.log(["[buff] system run ----->> "])
 		_update_buff_turns()
-		# TEST data: sim use prop
-		World_Helper.set_prop_index_by_key(1, 1)
-		World_Helper.game_state_flag = base.game_state.FIGHT
+		# 如果有动画需要播放,切换到动画状态
+		if not World_Helper._animate_list.is_empty():
+			World_Helper.game_state_flag = base.game_state.ANIMATE
+		else:
+			# 没有动画直接切换到战斗状态
+			# TEST data: sim use prop
+			World_Helper.set_prop_index_by_key(1, 1)
+			World_Helper.game_state_flag = base.game_state.FIGHT

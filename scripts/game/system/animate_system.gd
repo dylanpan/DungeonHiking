@@ -23,6 +23,8 @@ func _play_current_animate() -> void:
 		
 	var animate = _current_animates[_current_animate_index]
 	match animate.type:
+		base.animate_type.MOVE:
+			_play_move(animate)
 		base.animate_type.NORMAL_ATTACK:
 			_play_normal_attack(animate)
 		base.animate_type.SKILL_ATTACK:
@@ -43,6 +45,24 @@ func _play_current_animate() -> void:
 			_play_buff_effect(animate)
 		base.animate_type.DEATH:
 			_play_death(animate)
+
+# 播放移动动画
+func _play_move(animate: Dictionary) -> void:
+	var from_distance = animate.extra_data.from_distance
+	var to_distance = animate.extra_data.to_distance
+	var speed = animate.extra_data.speed
+	
+	Log_Helper.log([
+		"[animate] Move unit ",
+		animate.from_index,
+		" from ",
+		from_distance,
+		" to ",
+		to_distance,
+		" with speed ",
+		speed
+	])
+	# TODO: 实现具体移动动画效果
 
 func _play_normal_attack(animate: Dictionary) -> void:
 	Log_Helper.log([
@@ -236,9 +256,17 @@ func _play_death(animate: Dictionary) -> void:
 	# TODO: 实现具体动画效果
 
 func _get_animate_duration(animate_data: Dictionary) -> float:
+	# 如果动画数据中指定了时长就使用指定值
+	if "duration" in animate_data:
+		return animate_data.duration
+	
 	var duration = 1.0
 	# 为不同类型的动画设置默认时长
 	match animate_data.type:
+		base.animate_type.MOVE:
+			# 移动动画时长根据距离和速度计算
+			var distance = animate_data.extra_data.to_distance - animate_data.extra_data.from_distance
+			duration = distance / animate_data.extra_data.speed
 		base.animate_type.NORMAL_ATTACK:
 			duration = 0.8  # 普通攻击较快
 		base.animate_type.SKILL_ATTACK:
@@ -251,6 +279,17 @@ func _get_animate_duration(animate_data: Dictionary) -> float:
 			duration = 1.0  # 默认时长
 	return duration
 
+func _handle_state_transition():
+	# 从移动状态来的动画播放完后切换到buff状态
+	if World_Helper.game_state_flag == base.game_state.MOVE:
+		World_Helper.game_state_flag = base.game_state.BUFF
+	# 从buff状态来的动画播放完后切换到战斗状态
+	elif World_Helper.game_state_flag == base.game_state.BUFF:
+		World_Helper.game_state_flag = base.game_state.FIGHT
+	# 从战斗状态来的动画播放完后切换到移动状态
+	elif World_Helper.game_state_flag == base.game_state.FIGHT:
+		World_Helper.game_state_flag = base.game_state.MOVE
+
 func update(delta):
 	# 状态是动画播放时
 	if World_Helper.game_state_flag == base.game_state.ANIMATE:
@@ -258,8 +297,8 @@ func update(delta):
 		if _current_animate_index < 0:
 			_current_animates = World_Helper.pop_animates()
 			if _current_animates.is_empty():
-				# 没有动画数据,切换到移动状态
-				World_Helper.game_state_flag = base.game_state.MOVE
+				# 根据当前状态决定切换到哪个状态
+				_handle_state_transition()
 				return
 			_current_animate_index = 0
 			_current_time = 0
@@ -273,7 +312,8 @@ func update(delta):
 			if _current_animate_index >= _current_animates.size():
 				# 所有动画播放完成
 				_reset()
-				World_Helper.game_state_flag = base.game_state.MOVE
+				# 根据当前状态决定切换到哪个状态
+				_handle_state_transition()
 			else:
 				_current_time = 0
 				_play_current_animate()

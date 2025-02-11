@@ -68,24 +68,26 @@ enum buff_type {
 ## 战斗动画类型枚举
 enum animate_type {
 	NONE = 0,
+	## 单位移动
+	MOVE = 1,
 	## 普通攻击
-	NORMAL_ATTACK = 1,
+	NORMAL_ATTACK = 2,
 	## 技能攻击
-	SKILL_ATTACK = 2,
+	SKILL_ATTACK = 3,
 	## 道具攻击
-	PROP_ATTACK = 3,
+	PROP_ATTACK = 4,
 	## 反击   
-	COUNTER_ATTACK = 4,
+	COUNTER_ATTACK = 5,
 	## 闪避
-	DODGE = 5,
+	DODGE = 6,
 	## 护盾受击
-	SHIELD_HIT = 6,
+	SHIELD_HIT = 7,
 	## 护盾破碎
-	SHIELD_BREAK = 7,
+	SHIELD_BREAK = 8,
 	## 血量变化
-	HP_CHANGE = 8,
+	HP_CHANGE = 9,
 	## Buff效果
-	BUFF_EFFECT = 9,
+	BUFF_EFFECT = 10,
 	## 死亡
-	DEATH = 10,
+	DEATH = 11,
 }

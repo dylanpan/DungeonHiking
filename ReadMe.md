@@ -18,12 +18,117 @@
 - buff
 - 播放战斗动画
 
-##### 2 合成
+##### 2 系统流程图
+```mermaid
+graph TD
+	A[初始化] --> B[Initialize_System]
+	B --> C{游戏开始}
+
+	C --> D[Move_System]
+	D -->|生成移动动画| E[Animate_System]
+	E -->|移动动画播放完成| F[Buff_System]
+
+	F -->|无buff动画| G[Attack_System]
+	F -->|有buff动画| H[Animate_System:Buff动画]
+	H -->|buff动画播放完成| G
+
+	G -->|无战斗动画| D
+	G -->|有战斗动画| I[Animate_System:战斗动画]
+	I -->|战斗动画播放完成| D
+
+	D -->|游戏结束| J[结束]
+```
+
+```mermaid
+graph TD
+	subgraph 动画播放流程
+		K[获取动画队列] -->|队列为空| L[状态转换]
+		K -->|队列非空| M[播放当前动画]
+		M --> N{动画是否播放完成?}
+		N -->|否| M
+		N -->|是| O{还有下一个动画?}
+		O -->|是| M
+		O -->|否| L
+	end
+```
+
+```mermaid
+graph TD
+	subgraph 动画类型
+		direction TB
+		AA[Move动画]
+		AB[Normal Attack动画]
+		AC[Skill Attack动画]
+		AD[Prop Attack动画]
+		AE[Counter Attack动画]
+		AF[Dodge动画]
+		AG[Shield Hit动画]
+		AH[Shield Break动画]
+		AI[HP Change动画]
+		AJ[Buff Effect动画]
+		AK[Death动画]
+	end
+```
+
+```mermaid
+graph TD
+	subgraph 状态转换规则
+		BA[Move状态] -->|动画结束| BB[Buff状态]
+		BB -->|动画结束| BC[Fight状态]
+		BC -->|动画结束| BA
+	end
+```
+
+###### 系统流程说明：
+1. 初始化阶段：
+- Initialize_System 初始化所有单位和组件
+- 设置初始游戏状态为 MOVE
+
+2. 移动阶段 (Move_System)：
+- 计算所有单位的移动
+- 生成移动动画数据
+- 切换到 ANIMATE 状态播放移动动画
+- 设置攻击单位列表
+
+3. Buff阶段 (Buff_System)：
+- 处理所有buff效果
+- 生成buff动画数据
+- 如果有动画，切换到 ANIMATE 状态播放buff动画
+- 如无动画直接进入战斗阶段
+
+4. 战斗阶段 (Attack_System)：
+- 处理攻击逻辑
+- 生成攻击相关动画数据
+- 如果有动画，切换到 ANIMATE 状态播放战斗动画
+- 如无动画直接进入移动阶段
+
+5. 动画系统 (Animate_System)：
+- 管理和播放所有动画效果
+- 动画类型包括：
+	- 移动动画
+	- 普通攻击动画
+	- 技能攻击动画
+	- 道具攻击动画
+	- 反击动画
+	- 闪避动画
+	- 护盾受击/破碎动画
+	- 生命值变化动画
+	- Buff效果动画
+	- 死亡动画
+- 每个动画都有独立的播放时长
+- 动画播放完成后根据当前状态进行状态转换
+
+6.状态转换规则：
+- MOVE -> ANIMATE -> BUFF
+- BUFF -> ANIMATE -> FIGHT
+- FIGHT -> ANIMATE -> MOVE
+
+##### 3 合成
 - 配方：掉落 + 隐藏
 - 当前烹饪等级下合成料理：1）已有配方：材料合成得出指定结果，增加熟练度；2）无配方合成：材料合成得到指定结果，概率得到隐藏配方，增加熟练度
 
 
-##### 3 战前准备
+##### 4 战前准备
 - 库存整理（背包变化）
 - 人物配戴（属性变化）
 

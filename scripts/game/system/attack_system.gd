@@ -485,5 +485,10 @@ func update(delta):
 			# 更新对应数据
 		if count != length:
 			Log_Helper.log(["[attack] ----->> no match atk count ", count, "/", length])
-			if World_Helper.game_state_flag == base.game_state.FIGHT:
-				World_Helper.game_state_flag = base.game_state.MOVE
+			# 如果有动画需要播放,切换到动画状态
+			if not World_Helper._animate_list.is_empty():
+				World_Helper.game_state_flag = base.game_state.ANIMATE
+			else:
+				# 没有动画直接切换到移动状态
+				if count != length:
+					World_Helper.game_state_flag = base.game_state.MOVE

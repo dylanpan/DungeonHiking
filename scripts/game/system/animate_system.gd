@@ -281,7 +281,6 @@ func _get_animate_duration(animate_data: Dictionary) -> float:
 
 func _handle_state_transition():
 	var previous_state = World_Helper.get_previous_state()
-	Log_Helper.log(["[animate] handle state transition from ", previous_state])
 	match previous_state:
 		base.game_state.MOVE:
 			World_Helper.game_state_flag = base.game_state.BUFF
@@ -293,6 +292,7 @@ func _handle_state_transition():
 			# 如果没有记录到前一个状态，默认切换到移动状态
 			World_Helper.game_state_flag = base.game_state.MOVE
 	
+	Log_Helper.log(["[animate] handle state transition from ", World_Helper.get_state_name(previous_state), " to ", World_Helper.get_state_name(World_Helper.game_state_flag)])
 	# 清除状态记录
 	World_Helper.clear_previous_state()
 

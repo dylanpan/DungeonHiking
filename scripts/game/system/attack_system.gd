@@ -407,9 +407,10 @@ func _apply_buff(atk_index: int, be_atk_index: int, skill_index: int, prop_index
 	if buff_id != "":
 		var buff_ids_list = World_Helper.get_component_property_list("buff", "buff_ids")
 		var buff_ids = buff_ids_list[be_atk_index]
+		var buff_meta = Meta_Helper.get_buff(buff_id)
 		
 		# 添加新buff_id并初始化回合数
-		Log_Helper.log(["[attack] ", atk_index, " set buff to ", be_atk_index, " buff_id: ", buff_id])
+		Log_Helper.log(["[attack] ", atk_index, " set buff to ", be_atk_index, " buff_id: ", buff_id, "(", buff_meta["desc"], ")"])
 		if not buff_id in buff_ids:
 			# 创建新数组避免共享引用
 			var new_buff_ids = buff_ids.duplicate()

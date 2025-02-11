@@ -369,4 +369,11 @@ static func print_class_properties(obj: Object):
 
 static func print_dict_properties(obj: Dictionary):
 	print("print_dict ", obj)
+	
+static func get_state_name(state: base.game_state) -> String:
+	# 通过查找 base_type.gd 中 game_state 枚举的键来获取名称
+	for key in base.game_state.keys():
+		if base.game_state[key] == state:
+			return key
+	return "UNKNOWN"
 #endregion

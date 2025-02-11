@@ -1,12 +1,27 @@
 class_name World_Helper
 
+#region 游戏状态管理
 static var _game_state_flag: base.game_state = base.game_state.NONE
+static var _previous_state: base.game_state = base.game_state.NONE
+
 ## 游戏状态标识
 static var game_state_flag: base.game_state = base.game_state.NONE:
 	get:
 		return _game_state_flag
 	set(value):
-		_game_state_flag = value
+		# 切换状态时记录前一个状态
+		if value != _game_state_flag:
+			_previous_state = _game_state_flag
+			_game_state_flag = value
+
+## 获取前一个状态
+static func get_previous_state() -> base.game_state:
+	return _previous_state
+
+## 清除状态记录
+static func clear_previous_state() -> void:
+	_previous_state = base.game_state.NONE
+#endregion
 
 static var _world_components_map: Dictionary = {}
 static func add_component(component: I_Component):

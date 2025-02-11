@@ -266,7 +266,7 @@ func _get_animate_duration(animate_data: Dictionary) -> float:
 		base.animate_type.MOVE:
 			# 移动动画时长根据距离和速度计算
 			var distance = animate_data.extra_data.to_distance - animate_data.extra_data.from_distance
-			duration = distance / animate_data.extra_data.speed
+			duration = distance / animate_data.extra_data.speed * 0.01
 		base.animate_type.NORMAL_ATTACK:
 			duration = 0.8  # 普通攻击较快
 		base.animate_type.SKILL_ATTACK:
@@ -280,15 +280,21 @@ func _get_animate_duration(animate_data: Dictionary) -> float:
 	return duration
 
 func _handle_state_transition():
-	# 从移动状态来的动画播放完后切换到buff状态
-	if World_Helper.game_state_flag == base.game_state.MOVE:
-		World_Helper.game_state_flag = base.game_state.BUFF
-	# 从buff状态来的动画播放完后切换到战斗状态
-	elif World_Helper.game_state_flag == base.game_state.BUFF:
-		World_Helper.game_state_flag = base.game_state.FIGHT
-	# 从战斗状态来的动画播放完后切换到移动状态
-	elif World_Helper.game_state_flag == base.game_state.FIGHT:
-		World_Helper.game_state_flag = base.game_state.MOVE
+	var previous_state = World_Helper.get_previous_state()
+	Log_Helper.log(["[animate] handle state transition from ", previous_state])
+	match previous_state:
+		base.game_state.MOVE:
+			World_Helper.game_state_flag = base.game_state.BUFF
+		base.game_state.BUFF:
+			World_Helper.game_state_flag = base.game_state.FIGHT
+		base.game_state.FIGHT:
+			World_Helper.game_state_flag = base.game_state.CALCULATE
+		_:
+			# 如果没有记录到前一个状态，默认切换到移动状态
+			World_Helper.game_state_flag = base.game_state.MOVE
+	
+	# 清除状态记录
+	World_Helper.clear_previous_state()
 
 func update(delta):
 	# 状态是动画播放时

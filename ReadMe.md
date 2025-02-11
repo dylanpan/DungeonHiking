@@ -17,26 +17,29 @@
 - 道具攻击（消耗库存）
 - buff
 - 播放战斗动画
+- 结算部分
 
 ##### 2 系统流程图
 ```mermaid
 graph TD
-	A[初始化] --> B[Initialize_System]
-	B --> C{游戏开始}
-
-	C --> D[Move_System]
-	D -->|生成移动动画| E[Animate_System]
-	E -->|移动动画播放完成| F[Buff_System]
-
-	F -->|无buff动画| G[Attack_System]
-	F -->|有buff动画| H[Animate_System:Buff动画]
-	H -->|buff动画播放完成| G
-
-	G -->|无战斗动画| D
-	G -->|有战斗动画| I[Animate_System:战斗动画]
-	I -->|战斗动画播放完成| D
-
-	D -->|游戏结束| J[结束]
+    A[初始化] --> B[Initialize_System]
+    B --> C{游戏开始}
+    
+    C --> D[Move_System]
+    D -->|生成移动动画| E[Animate_System]
+    E -->|移动动画播放完成| F[Buff_System]
+    
+    F -->|无buff动画| G[Attack_System]
+    F -->|有buff动画| H[Animate_System:Buff动画]
+    H -->|buff动画播放完成| G
+    
+    G -->|无战斗动画| K[Calculate_System]
+    G -->|有战斗动画| I[Animate_System:战斗动画]
+    I -->|战斗动画播放完成| K
+    
+    K -->|检查结果| L{战斗是否结束?}
+    L -->|是| J[结束]
+    L -->|否| D
 ```
 
 ```mermaid
@@ -72,11 +75,13 @@ graph TD
 
 ```mermaid
 graph TD
-	subgraph 状态转换规则
-		BA[Move状态] -->|动画结束| BB[Buff状态]
-		BB -->|动画结束| BC[Fight状态]
-		BC -->|动画结束| BA
-	end
+    subgraph 状态转换规则
+        BA[Move状态] -->|动画结束| BB[Buff状态]
+        BB -->|动画结束| BC[Fight状态]
+        BC -->|动画结束| BD[Calculate状态]
+        BD -->|战斗未结束| BA
+        BD -->|战斗结束| BE[End状态]
+    end
 ```
 
 ###### 系统流程说明：
@@ -100,9 +105,14 @@ graph TD
 - 处理攻击逻辑
 - 生成攻击相关动画数据
 - 如果有动画，切换到 ANIMATE 状态播放战斗动画
-- 如无动画直接进入移动阶段
+- 如无动画直接进入结算阶段
 
-5. 动画系统 (Animate_System)：
+5. 计算阶段 (Calculate_System):
+- 检查战斗结果
+- 任意一方单位全部阵亡则切换到 END 状态
+- 否则切换到 MOVE 状态继续战斗
+
+6. 动画系统 (Animate_System)：
 - 管理和播放所有动画效果
 - 动画类型包括：
 	- 移动动画
@@ -116,12 +126,13 @@ graph TD
 	- Buff效果动画
 	- 死亡动画
 - 每个动画都有独立的播放时长
-- 动画播放完成后根据当前状态进行状态转换
+- 动画播放完成后根据前一个状态进行状态转换
 
-6.状态转换规则：
+7. 状态转换规则：
 - MOVE -> ANIMATE -> BUFF
 - BUFF -> ANIMATE -> FIGHT
-- FIGHT -> ANIMATE -> MOVE
+- FIGHT -> ANIMATE -> CALCULATE
+- CALCULATE -> MOVE/END
 
 ##### 3 合成
 - 配方：掉落 + 隐藏

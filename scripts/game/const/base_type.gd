@@ -38,7 +38,8 @@ enum game_state {
 	FIGHT = 5,
 	USE_PROP = 6,
 	ANIMATE = 7,
-	END = 8,
+	CALCULATE = 8,
+	END = 9,
 }
 
 ## 游戏内出现的 buff 类型枚举

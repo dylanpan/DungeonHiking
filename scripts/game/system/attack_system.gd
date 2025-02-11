@@ -122,8 +122,6 @@ func _update_hp_and_shield(index, damage):
 			"to_index": index,
 			"value": damage
 		})
-		if World_Helper.game_state_flag == base.game_state.FIGHT:
-			World_Helper.game_state_flag = base.game_state.MOVE
 	else:
 		if hp_list[index] > 0:
 			hp_list[index] -= damage - shield
@@ -152,30 +150,9 @@ func _update_hp_and_shield(index, damage):
 					"type": base.animate_type.DEATH,
 					"to_index": index
 				})
-				if _is_none_atk(index):
-					World_Helper.game_state_flag = base.game_state.END
-				else:
-					if World_Helper.game_state_flag == base.game_state.FIGHT:
-						World_Helper.game_state_flag = base.game_state.MOVE
-			else:
-				if World_Helper.game_state_flag == base.game_state.FIGHT:
-					World_Helper.game_state_flag = base.game_state.MOVE
 	Log_Helper.log(["[attack] ----->> end hp: ", hp_list])
 	#var _tmp = World_Helper.get_world_component_property_map()
 	#World_Helper.print_dict_properties(_tmp)
-
-func _is_none_atk(be_atk_index):
-	var hp_list = World_Helper.get_component_property_list("hp", "hp")
-	var id_type_list = World_Helper.get_component_property_list("id", "id_type")
-	var be_atk_type = id_type_list[be_atk_index]
-	var be_attack_index_list = []
-	var i_length = id_type_list.size()
-	for index in range(i_length):
-		# 判断攻击方类型
-		if id_type_list[index] == be_atk_type and hp_list[index] > 0:
-			be_attack_index_list.append(index)
-	var b_length = be_attack_index_list.size()
-	return b_length <= 0
 
 func _get_is_critical(index):
 	var critical_rate_list = World_Helper.get_component_property_list("critical", "critical_rate")
@@ -440,55 +417,40 @@ func _apply_buff(atk_index: int, be_atk_index: int, skill_index: int, prop_index
 			buff_ids_list[be_atk_index] = new_buff_ids
 			# 初始化buff回合数
 			World_Helper.init_buff_turns(be_atk_index, buff_id)
-			# 添加buff效果动画
-			World_Helper.add_animate({
-				"type": base.animate_type.BUFF_EFFECT,
-				"from_index": atk_index,
-				"to_index": be_atk_index,
-				"buff_id": buff_id,
-				"extra_data": {
-					"is_immunity": World_Helper.is_immunity(be_atk_index)
-				}
-			})
 
 func update(delta):
 	if World_Helper.game_state_flag == base.game_state.FIGHT:
 		Log_Helper.log(["[attack] system run ----->> "])
 		var attack_index_list = World_Helper.get_attack_index_list()
-		var length = attack_index_list.size()
-		var count = 0
+
 		# 攻击敌方单位
 		for index in attack_index_list:
 			# 晕眩状态下跳过攻击
 			if World_Helper.is_stun(index):
 				Log_Helper.log(["[attack] ----->> ", index, " is stunned, skip attack"])
-				count += 1
 				continue
 			
 			# 选择攻击方式（默认物理攻击，技能、道具为主动使用）
-			var is_do = false
 			var result = _get_atk_type(index)
 			var atk_type = result[0]
 			var skill_index = result[1]
 			var prop_index = result[2]
-			if atk_type == base.atk_type.NORMAL:
+
+			match atk_type:
 				# 物理攻击
-				is_do = _do_attack(index)
-			elif atk_type == base.atk_type.PROP:
+				base.atk_type.NORMAL:
+					_do_attack(index)
 				# 道具攻击
-				is_do = _do_prop_attack(index, prop_index)
-			elif atk_type == base.atk_type.SKILL:
+				base.atk_type.PROP:
+					_do_prop_attack(index, prop_index)
 				# 技能攻击
-				is_do = _do_skill_attack(index, skill_index)
-			if is_do:
-				count += 1
+				base.atk_type.SKILL:
+					_do_skill_attack(index, skill_index)
+
 			# 更新对应数据
-		if count != length:
-			Log_Helper.log(["[attack] ----->> no match atk count ", count, "/", length])
-			# 如果有动画需要播放,切换到动画状态
-			if not World_Helper._animate_list.is_empty():
-				World_Helper.game_state_flag = base.game_state.ANIMATE
-			else:
-				# 没有动画直接切换到移动状态
-				if count != length:
-					World_Helper.game_state_flag = base.game_state.MOVE
+		# 如果有动画需要播放,切换到动画状态
+		if not World_Helper._animate_list.is_empty():
+			World_Helper.game_state_flag = base.game_state.ANIMATE
+		else:
+			# 没有动画直接切换到移动状态
+			World_Helper.game_state_flag = base.game_state.CALCULATE

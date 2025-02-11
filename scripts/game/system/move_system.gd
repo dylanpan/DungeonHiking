@@ -93,5 +93,5 @@ func update(delta):
 		Log_Helper.log(["[move] last_distance: ", last_distance_list, ", attack index: ", min_indexs])
 		
 		# 切换到动画状态播放移动动画
-		World_Helper.game_state_flag = base.game_state.ANIMATE
+		World_Helper.game_state_flag = base.game_state.ANIMATE 
 		_start_move_flag = false

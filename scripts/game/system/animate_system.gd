@@ -62,7 +62,7 @@ func _play_move(animate: Dictionary) -> void:
 		" with speed ",
 		speed
 	])
-	# TODO: 实现具体移动动画效果
+	# TODO: 实现具体动画效果
 
 func _play_normal_attack(animate: Dictionary) -> void:
 	Log_Helper.log([
